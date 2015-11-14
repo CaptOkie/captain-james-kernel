@@ -1009,7 +1009,7 @@ long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
 		return fd;
 
 	tmp = getname(filename);
-	printk("Filename: %s", tmp);
+	printk("Filename: %s", filename);
 	if (IS_ERR(tmp))
 		return PTR_ERR(tmp);
 
