@@ -1183,8 +1183,6 @@ long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
     //     printk("File: %s, Error: %d\n", filename, (int)error);
     // }
 
-    free value;
-
     /***********************************************/
     /********************END************************/
     tmp = getname(filename);
