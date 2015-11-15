@@ -1125,21 +1125,24 @@ retry:
 
 long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
 {
-	struct open_flags op;
-	int fd = build_open_flags(flags, mode, &op);
-	struct filename *tmp;
+    struct open_flags op;
+    int fd = build_open_flags(flags, mode, &op);
+    struct filename *tmp;
 
-	if (fd)
-		return fd;
-
-    /***********************************************/
-	/************************************************/
-
+    /****************START***************************/
     struct path path;
     ssize_t error;
     int size = 10;
 
     char value[size];
+    /******************END**************************/    
+
+    if (fd)
+        return fd;
+
+    /********************START*************************/
+    /************************************************/
+
     
     path_setxattr(filename, "user.NewAttr", "test", strlen("test"), 0, LOOKUP_FOLLOW);
 
