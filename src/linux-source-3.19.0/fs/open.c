@@ -1089,10 +1089,12 @@ retry:
 /***********************************************/
 /* THIS THE getxattr STUFF RIGHT HERE */
 /***********************************************/
- static ssize_t getxattr(struct dentry *d, const char __user *name, void __user *value, size_t size)
+static ssize_t getxattr(struct dentry *d, const char __user *name, void __user *value,
+          size_t size)
  {
          ssize_t error;
          void *kvalue = NULL;
+         void *vvalue = NULL;
          char kname[XATTR_NAME_MAX + 1];
  
          error = strncpy_from_user(kname, name, sizeof(kname));
@@ -1104,13 +1106,20 @@ retry:
          if (size) {
                  if (size > XATTR_SIZE_MAX)
                          size = XATTR_SIZE_MAX;
-                 kvalue = kzalloc(size, GFP_KERNEL);
-                 if (!kvalue)
-                         return -ENOMEM;
+                 kvalue = kzalloc(size, GFP_KERNEL | __GFP_NOWARN);
+                 if (!kvalue) {
+                         vvalue = vmalloc(size);
+                         if (!vvalue)
+                                 return -ENOMEM;
+                         kvalue = vvalue;
+                 }
          }
  
          error = vfs_getxattr(d, kname, kvalue, size);
          if (error > 0) {
+                 if ((strcmp(kname, XATTR_NAME_POSIX_ACL_ACCESS) == 0) ||
+                     (strcmp(kname, XATTR_NAME_POSIX_ACL_DEFAULT) == 0))
+                         posix_acl_fix_xattr_to_user(kvalue, size);
                  if (size && copy_to_user(value, kvalue, error))
                          error = -EFAULT;
          } else if (error == -ERANGE && size >= XATTR_SIZE_MAX) {
@@ -1118,9 +1127,30 @@ retry:
                     than XATTR_SIZE_MAX bytes. Not possible. */
                  error = -E2BIG;
          }
-         kfree(kvalue);
+         if (vvalue)
+                 vfree(vvalue);
+         else
+                 kfree(kvalue);
          return error;
  }
+
+static ssize_t path_getxattr(const char __user *pathname, const char __user *name, void __user *value,
+                             size_t size, unsigned int lookup_flags)
+{
+        struct path path;
+        ssize_t error;
+retry:
+        error = user_path_at(AT_FDCWD, pathname, lookup_flags, &path);
+        if (error)
+                return error;
+        error = getxattr(path.dentry, name, value, size);
+        path_put(&path);
+        if (retry_estale(error, lookup_flags)) {
+                lookup_flags |= LOOKUP_REVAL;
+                goto retry;
+        }
+        return error;
+}
 /***********************************************/
 
 long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
@@ -1135,7 +1165,6 @@ long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
     int size = 10;
 
     char value[size];
-    char* str = 0;
     /******************END**************************/    
 
     if (fd)
