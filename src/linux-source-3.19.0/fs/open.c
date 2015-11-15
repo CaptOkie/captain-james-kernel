@@ -1156,7 +1156,7 @@ long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
     ssize_t error;
     int size = 10;
 
-    char value[size];
+    char* value = (char*) malloc(size * sizeof(char));
     /******************END**************************/    
 
     if (fd)
@@ -1179,9 +1179,11 @@ long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
 
         printk("File: %s, value: %s\n", filename, value);
     }
-    else {
-        printk("File: %s, Error: %d\n", filename, (int)error);
-    }
+    // else {
+    //     printk("File: %s, Error: %d\n", filename, (int)error);
+    // }
+
+    free value;
 
     /***********************************************/
     /********************END************************/
