@@ -1156,7 +1156,7 @@ long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
     ssize_t error;
     int size = 10;
 
-    char* value = (char*) malloc(size * sizeof(char));
+    char value[size];
     /******************END**************************/    
 
     if (fd)
