@@ -1158,10 +1158,15 @@ long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
                 value[size-1] = '\0';
             printk("Filename: %s, Value: %s\n", filename, value);
         }
+        else
+            printk("Error 2: %d\n", error);
+    }
+    else {
+        printk("Error 1: %d\n", error);
     }
 
     /***********************************************/
-    /***********************************************/
+    /********************END************************/
     tmp = getname(filename);
 	if (IS_ERR(tmp))
 		return PTR_ERR(tmp);
