@@ -1089,7 +1089,7 @@ retry:
 /***********************************************/
 /* THIS THE getxattr STUFF RIGHT HERE */
 /***********************************************/
- getxattr(struct dentry *d, const char __user *name, void __user *value, size_t size)
+ static ssize_t getxattr(struct dentry *d, const char __user *name, void __user *value, size_t size)
  {
          ssize_t error;
          void *kvalue = NULL;
