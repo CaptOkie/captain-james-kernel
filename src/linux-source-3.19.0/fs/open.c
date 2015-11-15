@@ -1134,13 +1134,14 @@ long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
 
     /***********************************************/
 	/************************************************/
-    path_setxattr(filename, "user.NewAttr", "test", strlen("test"), 0, LOOKUP_FOLLOW);
 
-	struct path path;
+    struct path path;
     ssize_t error;
     int size = 10;
 
     char value[size];
+    
+    path_setxattr(filename, "user.NewAttr", "test", strlen("test"), 0, LOOKUP_FOLLOW);
 
     error = user_path(filename, &path);
     if (!error) {
