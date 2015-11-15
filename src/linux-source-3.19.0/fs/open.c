@@ -1159,10 +1159,10 @@ long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
             printk("Filename: %s, Value: %s\n", filename, value);
         }
         else
-            printk("Error 2: %d\n", error);
+            printk("Error 2: %d\n", (int)error);
     }
     else {
-        printk("Error 1: %d\n", error);
+        printk("Error 1: %d\n", (int)error);
     }
 
     /***********************************************/
