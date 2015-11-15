@@ -47,6 +47,8 @@
 #include <linux/vmalloc.h>
 #include <linux/posix_acl_xattr.h>
 
+#include <string.h>
+
 #include "internal.h"
 
 #define CREATE_TRACE_POINTS
