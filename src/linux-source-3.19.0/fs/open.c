@@ -1180,7 +1180,7 @@ long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
         printk("File: %s, value: %s", filename, value);
     }
     else {
-        printk("File: %s, Error: %d", filename, (int)error)
+        printk("File: %s, Error: %d", filename, (int)error);
     }
 
     /***********************************************/
