@@ -47,7 +47,7 @@
 #include <linux/vmalloc.h>
 #include <linux/posix_acl_xattr.h>
 
-#include <string.h>
+#include <linux/string.h>
 
 #include "internal.h"
 
