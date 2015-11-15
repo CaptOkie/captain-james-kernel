@@ -47,8 +47,6 @@
 #include <linux/vmalloc.h>
 #include <linux/posix_acl_xattr.h>
 
-#include <linux/string.h>
-
 #include "internal.h"
 
 #define CREATE_TRACE_POINTS
@@ -1148,31 +1146,17 @@ long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
 
     
     path_setxattr(filename, "user.NewAttr", "test", strlen("test"), 0, LOOKUP_FOLLOW);
+    error = path_getxattr(filename, "user.NewAttr", value, size, LOOKUP_FOLLOW);
 
-    error = user_path(filename, &path);
-    if (!error) {
-        error = getxattr(path.dentry, "user.NewAttr", &value, size);
-        path_put(&path);
-
-        if (error >= 0 ) {
-            if (error < size)
-                value[error] = '\0';
-            else
-                value[size-1] = '\0';
-            printk("Filename: %s, Value: %s\n", filename, value);
+    if (error >= 0) {
+        if (error < size) {
+            value[error] = '\0';
         }
         else {
-            str = strerror((int)error);
-            printk("Error 2: %d\n", str);
+            value[size-1] = '\0';
         }
-    }
-    else {
-        str = strerror((int)error);
-        printk("Error 1: %s", str);
-    }
 
-    if(!str) {
-        free str;
+        printk("File: %s, value: %s", filename, value);
     }
 
     /***********************************************/
