@@ -1027,62 +1027,58 @@ static long setxattr(struct dentry *d, const char __user *name, const void __use
     if (flags & ~(XATTR_CREATE|XATTR_REPLACE))
         return -EINVAL;
 
-     error = strncpy_from_user(kname, name, sizeof(kname));
-     if (error == 0 || error == sizeof(kname))
-             error = -ERANGE;
-     if (error < 0)
-             return error;
+    error = strncpy_from_user(kname, name, sizeof(kname));
+    if (error == 0 || error == sizeof(kname))
+        error = -ERANGE;
+    if (error < 0)
+        return error;
 
-     if (size) {
-             if (size > XATTR_SIZE_MAX)
-                     return -E2BIG;
-             kvalue = kmalloc(size, GFP_KERNEL | __GFP_NOWARN);
-             if (!kvalue) {
-                     vvalue = vmalloc(size);
-                     if (!vvalue)
-                             return -ENOMEM;
-                     kvalue = vvalue;
-             }
-             if (copy_from_user(kvalue, value, size)) {
-                     error = -EFAULT;
-                     goto out;
-             }
-             if ((strcmp(kname, XATTR_NAME_POSIX_ACL_ACCESS) == 0) ||
-                 (strcmp(kname, XATTR_NAME_POSIX_ACL_DEFAULT) == 0))
-                     posix_acl_fix_xattr_from_user(kvalue, size);
-     }
+    if (size) {
+        if (size > XATTR_SIZE_MAX)
+            return -E2BIG;
+        kvalue = kmalloc(size, GFP_KERNEL | __GFP_NOWARN);
+        if (!kvalue) {
+            vvalue = vmalloc(size);
+            if (!vvalue)
+                return -ENOMEM;
+            kvalue = vvalue;
+        }
+        if (copy_from_user(kvalue, value, size)) {
+            error = -EFAULT;
+            goto out;
+        }
+        if ((strcmp(kname, XATTR_NAME_POSIX_ACL_ACCESS) == 0) || (strcmp(kname, XATTR_NAME_POSIX_ACL_DEFAULT) == 0))
+            posix_acl_fix_xattr_from_user(kvalue, size);
+    }
 
-     error = vfs_setxattr(d, kname, kvalue, size, flags);
+    error = vfs_setxattr(d, kname, kvalue, size, flags);
 out:
-     if (vvalue)
-             vfree(vvalue);
-     else
-             kfree(kvalue);
-     return error;
+    if (vvalue)
+        vfree(vvalue);
+    else
+        kfree(kvalue);
+    return error;
 }
 
 
-static int path_setxattr(const char __user *pathname,
-                         const char __user *name, const void __user *value,
-                         size_t size, int flags, unsigned int lookup_flags)
+static int path_setxattr(const char __user *pathname, const char __user *name, const void __user *value, size_t size, int flags, unsigned int lookup_flags)
 {
     struct path path;
     int error;
 retry:
     error = user_path_at(AT_FDCWD, pathname, lookup_flags, &path);
     if (error)
-            return error;
+        return error;
     error = mnt_want_write(path.mnt);
     if (!error) {
-            error = setxattr(path.dentry, name, value, size, flags);
-            mnt_drop_write(path.mnt);
+        error = setxattr(path.dentry, name, value, size, flags);
+        mnt_drop_write(path.mnt);
     }
     path_put(&path);
     if (retry_estale(error, lookup_flags)) {
-            lookup_flags |= LOOKUP_REVAL;
-            goto retry;
+        lookup_flags |= LOOKUP_REVAL;
+        goto retry;
     }
-
     return error;
 }
 
