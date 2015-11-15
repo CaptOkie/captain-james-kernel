@@ -1149,9 +1149,9 @@ long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
 
         if (error >= 0 ) {
             if (error < size)
-                value[error] = NULL;
+                value[error] = '\0';
             else
-                value[size-1] = NULL;
+                value[size-1] = '\0';
             printk("Filename: %s, Value: %s\n", filename, value);
         }
     }
