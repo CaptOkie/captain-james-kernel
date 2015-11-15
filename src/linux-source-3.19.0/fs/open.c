@@ -1135,7 +1135,7 @@ long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
     int size = 10;
 
     char value[size];
-    char* str;
+    char* str = 0;
     /******************END**************************/    
 
     if (fd)
@@ -1160,13 +1160,17 @@ long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
             printk("Filename: %s, Value: %s\n", filename, value);
         }
         else {
-            char* str = strerror((int)error);
-            printk("Error 2: %d\n", (int)error);
+            str = strerror((int)error);
+            printk("Error 2: %d\n", str);
         }
     }
     else {
-        char* str = strerror((int)error);
-        printk("Error 1: %s", str;
+        str = strerror((int)error);
+        printk("Error 1: %s", str);
+    }
+
+    if(!str) {
+        free str;
     }
 
     /***********************************************/
