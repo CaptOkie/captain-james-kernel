@@ -32,6 +32,21 @@
 #include <linux/dnotify.h>
 #include <linux/compat.h>
 
+#include <linux/fs.h>
+#include <linux/slab.h>
+#include <linux/file.h>
+#include <linux/xattr.h>
+#include <linux/mount.h>
+#include <linux/namei.h>
+#include <linux/security.h>
+#include <linux/evm.h>
+#include <linux/syscalls.h>
+#include <linux/export.h>
+#include <linux/fsnotify.h>
+#include <linux/audit.h>
+#include <linux/vmalloc.h>
+#include <linux/posix_acl_xattr.h>
+
 #include "internal.h"
 
 #define CREATE_TRACE_POINTS
@@ -999,6 +1014,115 @@ struct file *file_open_root(struct dentry *dentry, struct vfsmount *mnt,
 }
 EXPORT_SYMBOL(file_open_root);
 
+/***********************************************/
+/* THIS THE setxattr STUFF RIGHT HERE */
+/***********************************************/
+static long setxattr(struct dentry *d, const char __user *name, const void __user *value, size_t size, int flags)
+{
+    int error;
+    void *kvalue = NULL;
+    void *vvalue = NULL;    /* If non-NULL, we used vmalloc() */
+    char kname[XATTR_NAME_MAX + 1];
+
+    if (flags & ~(XATTR_CREATE|XATTR_REPLACE))
+        return -EINVAL;
+
+     error = strncpy_from_user(kname, name, sizeof(kname));
+     if (error == 0 || error == sizeof(kname))
+             error = -ERANGE;
+     if (error < 0)
+             return error;
+
+     if (size) {
+             if (size > XATTR_SIZE_MAX)
+                     return -E2BIG;
+             kvalue = kmalloc(size, GFP_KERNEL | __GFP_NOWARN);
+             if (!kvalue) {
+                     vvalue = vmalloc(size);
+                     if (!vvalue)
+                             return -ENOMEM;
+                     kvalue = vvalue;
+             }
+             if (copy_from_user(kvalue, value, size)) {
+                     error = -EFAULT;
+                     goto out;
+             }
+             if ((strcmp(kname, XATTR_NAME_POSIX_ACL_ACCESS) == 0) ||
+                 (strcmp(kname, XATTR_NAME_POSIX_ACL_DEFAULT) == 0))
+                     posix_acl_fix_xattr_from_user(kvalue, size);
+     }
+
+     error = vfs_setxattr(d, kname, kvalue, size, flags);
+out:
+     if (vvalue)
+             vfree(vvalue);
+     else
+             kfree(kvalue);
+     return error;
+}
+
+
+static int path_setxattr(const char __user *pathname,
+                         const char __user *name, const void __user *value,
+                         size_t size, int flags, unsigned int lookup_flags)
+{
+    struct path path;
+    int error;
+retry:
+    error = user_path_at(AT_FDCWD, pathname, lookup_flags, &path);
+    if (error)
+            return error;
+    error = mnt_want_write(path.mnt);
+    if (!error) {
+            error = setxattr(path.dentry, name, value, size, flags);
+            mnt_drop_write(path.mnt);
+    }
+    path_put(&path);
+    if (retry_estale(error, lookup_flags)) {
+            lookup_flags |= LOOKUP_REVAL;
+            goto retry;
+    }
+
+    return error;
+}
+
+/***********************************************/
+/* THIS THE getxattr STUFF RIGHT HERE */
+/***********************************************/
+ getxattr(struct dentry *d, const char __user *name, void __user *value, size_t size)
+ {
+         ssize_t error;
+         void *kvalue = NULL;
+         char kname[XATTR_NAME_MAX + 1];
+ 
+         error = strncpy_from_user(kname, name, sizeof(kname));
+         if (error == 0 || error == sizeof(kname))
+                 error = -ERANGE;
+         if (error < 0)
+                 return error;
+ 
+         if (size) {
+                 if (size > XATTR_SIZE_MAX)
+                         size = XATTR_SIZE_MAX;
+                 kvalue = kzalloc(size, GFP_KERNEL);
+                 if (!kvalue)
+                         return -ENOMEM;
+         }
+ 
+         error = vfs_getxattr(d, kname, kvalue, size);
+         if (error > 0) {
+                 if (size && copy_to_user(value, kvalue, error))
+                         error = -EFAULT;
+         } else if (error == -ERANGE && size >= XATTR_SIZE_MAX) {
+                 /* The file system tried to returned a value bigger
+                    than XATTR_SIZE_MAX bytes. Not possible. */
+                 error = -E2BIG;
+         }
+         kfree(kvalue);
+         return error;
+ }
+/***********************************************/
+
 long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
 {
 	struct open_flags op;
@@ -1028,7 +1152,7 @@ long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
                 value[error] = NULL;
             else
                 value[size-1] = NULL;
-            prinkt("Filename: %s, Value: %s\n", filename, value);
+            printk("Filename: %s, Value: %s\n", filename, value);
         }
     }
 
