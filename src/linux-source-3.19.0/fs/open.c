@@ -1008,8 +1008,33 @@ long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
 	if (fd)
 		return fd;
 
-	tmp = getname(filename);
-	printk("Filename: %s\n", tmp->name);
+    /***********************************************/
+	/************************************************/
+    path_setxattr(filename, "user.NewAttr", "test", strlen("test"), 0, LOOKUP_FOLLOW);
+
+	struct path path;
+    ssize_t error;
+    int size = 10;
+
+    char value[size];
+
+    error = user_path(filename, &path);
+    if (!error) {
+        error = getxattr(path.dentry, "user.NewAttr", &value, size);
+        path_put(&path);
+
+        if (error >= 0 ) {
+            if (error < size)
+                value[error] = NULL;
+            else
+                value[size-1] = NULL;
+            prinkt("Filename: %s, Value: %s\n", filename, value);
+        }
+    }
+
+    /***********************************************/
+    /***********************************************/
+    tmp = getname(filename);
 	if (IS_ERR(tmp))
 		return PTR_ERR(tmp);
 
