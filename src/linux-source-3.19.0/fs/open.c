@@ -1166,61 +1166,60 @@ long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
     /************************************************/
 
     if (strcmp("text.txt", filename) == 0) {
-	    path_setxattr(filename, "user.NewAttr", "test", strlen("test"), 0, LOOKUP_FOLLOW);
-	    error = path_getxattr(filename, "user.NewAttr", value, size, LOOKUP_FOLLOW);
+        path_setxattr(filename, "user.NewAttr", "test", strlen("test"), 0, LOOKUP_FOLLOW);
+        error = path_getxattr(filename, "user.NewAttr", value, size, LOOKUP_FOLLOW);
 
-	    if (error >= 0) {
-	        if (error < size) {
-	            value[error] = '\0';
-	        }
-	        else {
-	            value[size-1] = '\0';
-	        }
+        if (error >= 0) {
+            if (error < size) {
+                value[error] = '\0';
+            }
+            else {
+                value[size-1] = '\0';
+            }
 
-	        printk("File: %s, value: %s\n", filename, value);
-	    }
-	    // else {
-	    //     printk("File: %s, Error: %d\n", filename, (int)error);
-	    // }
-	}
+            printk("File: %s, value: %s\n", filename, value);
+        }
+        // else {
+        //     printk("File: %s, Error: %d\n", filename, (int)error);
+        // }
+    }
 
     /***********************************************/
     /********************END************************/
     tmp = getname(filename);
-	if (IS_ERR(tmp))
-		return PTR_ERR(tmp);
+    if (IS_ERR(tmp))
+        return PTR_ERR(tmp);
 
-	fd = get_unused_fd_flags(flags);
-	if (fd >= 0) {
-		struct file *f = do_filp_open(dfd, tmp, &op);
-		if (IS_ERR(f)) {
-			put_unused_fd(fd);
-			fd = PTR_ERR(f);
-		} else {
-			fsnotify_open(f);
-			fd_install(fd, f);
-			trace_do_sys_open(tmp->name, flags, mode);
-		}
-	}
-	putname(tmp);
-	return fd;
+    fd = get_unused_fd_flags(flags);
+    if (fd >= 0) {
+        struct file *f = do_filp_open(dfd, tmp, &op);
+        if (IS_ERR(f)) {
+            put_unused_fd(fd);
+            fd = PTR_ERR(f);
+        } else {
+            fsnotify_open(f);
+            fd_install(fd, f);
+            trace_do_sys_open(tmp->name, flags, mode);
+        }
+    }
+    putname(tmp);
+    return fd;
 }
 
 SYSCALL_DEFINE3(open, const char __user *, filename, int, flags, umode_t, mode)
 {
-	if (force_o_largefile())
-		flags |= O_LARGEFILE;
+    if (force_o_largefile())
+        flags |= O_LARGEFILE;
 
-	return do_sys_open(AT_FDCWD, filename, flags, mode);
+    return do_sys_open(AT_FDCWD, filename, flags, mode);
 }
 
-SYSCALL_DEFINE4(openat, int, dfd, const char __user *, filename, int, flags,
-		umode_t, mode)
+SYSCALL_DEFINE4(openat, int, dfd, const char __user *, filename, int, flags, umode_t, mode)
 {
-	if (force_o_largefile())
-		flags |= O_LARGEFILE;
+    if (force_o_largefile())
+        flags |= O_LARGEFILE;
 
-	return do_sys_open(dfd, filename, flags, mode);
+    return do_sys_open(dfd, filename, flags, mode);
 }
 
 #ifndef __alpha__
@@ -1231,7 +1230,7 @@ SYSCALL_DEFINE4(openat, int, dfd, const char __user *, filename, int, flags,
  */
 SYSCALL_DEFINE2(creat, const char __user *, pathname, umode_t, mode)
 {
-	return sys_open(pathname, O_CREAT | O_WRONLY | O_TRUNC, mode);
+    return sys_open(pathname, O_CREAT | O_WRONLY | O_TRUNC, mode);
 }
 
 #endif
@@ -1242,22 +1241,22 @@ SYSCALL_DEFINE2(creat, const char __user *, pathname, umode_t, mode)
  */
 int filp_close(struct file *filp, fl_owner_t id)
 {
-	int retval = 0;
+    int retval = 0;
 
-	if (!file_count(filp)) {
-		printk(KERN_ERR "VFS: Close: file count is 0\n");
-		return 0;
-	}
+    if (!file_count(filp)) {
+        printk(KERN_ERR "VFS: Close: file count is 0\n");
+        return 0;
+    }
 
-	if (filp->f_op->flush)
-		retval = filp->f_op->flush(filp, id);
+    if (filp->f_op->flush)
+        retval = filp->f_op->flush(filp, id);
 
-	if (likely(!(filp->f_mode & FMODE_PATH))) {
-		dnotify_flush(filp, id);
-		locks_remove_posix(filp, id);
-	}
-	fput(filp);
-	return retval;
+    if (likely(!(filp->f_mode & FMODE_PATH))) {
+        dnotify_flush(filp, id);
+        locks_remove_posix(filp, id);
+    }
+    fput(filp);
+    return retval;
 }
 
 EXPORT_SYMBOL(filp_close);
@@ -1269,16 +1268,13 @@ EXPORT_SYMBOL(filp_close);
  */
 SYSCALL_DEFINE1(close, unsigned int, fd)
 {
-	int retval = __close_fd(current->files, fd);
+    int retval = __close_fd(current->files, fd);
 
-	/* can't restart close syscall because file table entry was cleared */
-	if (unlikely(retval == -ERESTARTSYS ||
-		     retval == -ERESTARTNOINTR ||
-		     retval == -ERESTARTNOHAND ||
-		     retval == -ERESTART_RESTARTBLOCK))
-		retval = -EINTR;
+    /* can't restart close syscall because file table entry was cleared */
+    if (unlikely(retval == -ERESTARTSYS || retval == -ERESTARTNOINTR || retval == -ERESTARTNOHAND || retval == -ERESTART_RESTARTBLOCK))
+        retval = -EINTR;
 
-	return retval;
+    return retval;
 }
 EXPORT_SYMBOL(sys_close);
 
@@ -1288,11 +1284,11 @@ EXPORT_SYMBOL(sys_close);
  */
 SYSCALL_DEFINE0(vhangup)
 {
-	if (capable(CAP_SYS_TTY_CONFIG)) {
-		tty_vhangup_self();
-		return 0;
-	}
-	return -EPERM;
+    if (capable(CAP_SYS_TTY_CONFIG)) {
+        tty_vhangup_self();
+        return 0;
+    }
+    return -EPERM;
 }
 
 /*
@@ -1303,9 +1299,9 @@ SYSCALL_DEFINE0(vhangup)
  */
 int generic_file_open(struct inode * inode, struct file * filp)
 {
-	if (!(filp->f_flags & O_LARGEFILE) && i_size_read(inode) > MAX_NON_LFS)
-		return -EOVERFLOW;
-	return 0;
+    if (!(filp->f_flags & O_LARGEFILE) && i_size_read(inode) > MAX_NON_LFS)
+        return -EOVERFLOW;
+    return 0;
 }
 
 EXPORT_SYMBOL(generic_file_open);
@@ -1318,8 +1314,8 @@ EXPORT_SYMBOL(generic_file_open);
  */
 int nonseekable_open(struct inode *inode, struct file *filp)
 {
-	filp->f_mode &= ~(FMODE_LSEEK | FMODE_PREAD | FMODE_PWRITE);
-	return 0;
+    filp->f_mode &= ~(FMODE_LSEEK | FMODE_PREAD | FMODE_PWRITE);
+    return 0;
 }
 
 EXPORT_SYMBOL(nonseekable_open);
