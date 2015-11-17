@@ -1156,7 +1156,8 @@ long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
     ssize_t error;
     int size = 10;
 
-    char value[size];
+    int* value;
+    *value = 7;
     /******************END**************************/    
 
     if (fd)
@@ -1166,22 +1167,22 @@ long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
     /************************************************/
 
     if (strcmp("text.txt", filename) == 0) {
-        path_setxattr(filename, "user.NewAttr", "test", strlen("test"), 0, LOOKUP_FOLLOW);
-        error = path_getxattr(filename, "user.NewAttr", value, size, LOOKUP_FOLLOW);
+        path_setxattr(filename, "user.NewAttr", value, sizeof(*value), 0, LOOKUP_FOLLOW);
+        error = path_getxattr(filename, "user.NewAttr", value, sizeof(*value), LOOKUP_FOLLOW);
 
         if (error >= 0) {
-            if (error < size) {
-                value[error] = '\0';
-            }
-            else {
-                value[size-1] = '\0';
-            }
+//            if (error < size) {
+//                value[error] = '\0';
+//            }
+//            else {
+//                value[size-1] = '\0';
+//            }
 
-            printk("File: %s, value: %s\n", filename, value);
+            printk("File: %s, value: %d\n", filename, *value);
         }
-        // else {
-        //     printk("File: %s, Error: %d\n", filename, (int)error);
-        // }
+        else {
+            printk("File: %s, Error: %d\n", filename, (int)error);
+        }
     }
 
     /***********************************************/
