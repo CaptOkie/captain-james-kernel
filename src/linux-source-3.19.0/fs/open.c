@@ -1165,23 +1165,24 @@ long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
     /********************START*************************/
     /************************************************/
 
-    
-    path_setxattr(filename, "user.NewAttr", "test", strlen("test"), 0, LOOKUP_FOLLOW);
-    error = path_getxattr(filename, "user.NewAttr", value, size, LOOKUP_FOLLOW);
+    if (strcmp("text.txt", filename) == 0) {
+	    path_setxattr(filename, "user.NewAttr", "test", strlen("test"), 0, LOOKUP_FOLLOW);
+	    error = path_getxattr(filename, "user.NewAttr", value, size, LOOKUP_FOLLOW);
 
-    if (error >= 0) {
-        if (error < size) {
-            value[error] = '\0';
-        }
-        else {
-            value[size-1] = '\0';
-        }
+	    if (error >= 0) {
+	        if (error < size) {
+	            value[error] = '\0';
+	        }
+	        else {
+	            value[size-1] = '\0';
+	        }
 
-        printk("File: %s, value: %s\n", filename, value);
-    }
-    // else {
-    //     printk("File: %s, Error: %d\n", filename, (int)error);
-    // }
+	        printk("File: %s, value: %s\n", filename, value);
+	    }
+	    // else {
+	    //     printk("File: %s, Error: %d\n", filename, (int)error);
+	    // }
+	}
 
     /***********************************************/
     /********************END************************/
