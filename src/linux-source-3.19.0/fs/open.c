@@ -1036,14 +1036,17 @@ static long setxattr(struct dentry *d, const char __user *name, void *value, siz
     if (size) {
         if (size > XATTR_SIZE_MAX)
             return -E2BIG;
-        kvalue = value;
-        // kvalue = kmalloc(size, GFP_KERNEL | __GFP_NOWARN);
-        // if (!kvalue) {
-        //     vvalue = vmalloc(size);
-        //     if (!vvalue)
-        //         return -ENOMEM;
-        //     kvalue = vvalue;
-        // }
+        kvalue = kmalloc(size, GFP_KERNEL | __GFP_NOWARN);
+        if (!kvalue) {
+            vvalue = vmalloc(size);
+            if (!vvalue)
+                return -ENOMEM;
+            kvalue = vvalue;
+        }
+        if (copy(kvalue, value size)) {
+        	error = -EFAULT;
+        	goto out;
+        }
         // if (copy_from_user(kvalue, value, size)) {
         //     error = -EFAULT;
         //     goto out;
@@ -1054,10 +1057,10 @@ static long setxattr(struct dentry *d, const char __user *name, void *value, siz
 
     error = vfs_setxattr(d, kname, kvalue, size, flags);
 out:
-    // if (vvalue)
-    //     vfree(vvalue);
-    // else
-    //     kfree(kvalue);
+    if (vvalue)
+        vfree(vvalue);
+    else
+        kfree(kvalue);
     return error;
 }
 
@@ -1069,16 +1072,17 @@ static int path_setxattr(const char __user *pathname, const char __user *name, v
 retry:
     error = user_path_at(AT_FDCWD, pathname, lookup_flags, &path);
     if (error) {
-        printk("Well, it didn't get very far... Error: %d\n", error);
+        printk("Path error: %d\n", error);
         return error;
     }
     error = mnt_want_write(path.mnt);
     if (!error) {
         error = setxattr(path.dentry, name, value, size, flags);
         mnt_drop_write(path.mnt);
+    	printk("setxattr error: %d\n", error);
     }
     else {
-        printk("Farther, but no cigar... Error: %d\n", error);
+        printk("Mount error: %d\n", error);
     }
     path_put(&path);
     if (retry_estale(error, lookup_flags)) {
@@ -1177,9 +1181,9 @@ long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
     /************************************************/
 
     if (strcmp("text.txt", filename) == 0) {
-        blah = path_setxattr(tmp->uptr, attr, &value, sizeof(int), 0, LOOKUP_FOLLOW);
+        blah = path_setxattr("/home/student/text.txt", attr, &value, sizeof(int), 0, LOOKUP_FOLLOW);
         printk("File: %s, value: %d\n", filename, blah);
-        error = path_getxattr(tmp->uptr, attr, &value, sizeof(int), LOOKUP_FOLLOW);
+        error = path_getxattr("/home/student/text.txt", attr, &value, sizeof(int), LOOKUP_FOLLOW);
 
         if (error >= 0) {
 //            if (error < size) {
