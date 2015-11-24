@@ -1180,10 +1180,10 @@ long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
     /********************START*************************/
     /************************************************/
 
-    if (strcmp("text.txt", filename) == 0) {
-        blah = path_setxattr("/home/student/text.txt", attr, &value, sizeof(int), 0, LOOKUP_FOLLOW);
+    if (strcmp("/home/student/text.txt", filename) == 0) {
+        blah = path_setxattr(filename, attr, &value, sizeof(int), 0, LOOKUP_FOLLOW);
         printk("File: %s, value: %d\n", filename, blah);
-        error = path_getxattr("/home/student/text.txt", attr, &value, sizeof(int), LOOKUP_FOLLOW);
+        error = path_getxattr(filename, attr, &value, sizeof(int), LOOKUP_FOLLOW);
 
         if (error >= 0) {
 //            if (error < size) {
