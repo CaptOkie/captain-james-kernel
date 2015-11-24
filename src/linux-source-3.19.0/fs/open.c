@@ -1028,8 +1028,8 @@ static long setxattr(struct dentry *d, const char __user *name, void *value, siz
         return -EINVAL;
 
     // error = strncpy_from_user(kname, name, sizeof(kname));
-    error = strncpy(kname, name, sizeof(kname));
-    if (error == 0 || error == sizeof(kname))
+    error = (int)strncpy(kname, name, sizeof(kname));
+    if (error == 0)// || error == sizeof(kname))
         error = -ERANGE;
     if (error < 0) {
         printk("strncpy_from_user error: %d\n", error);
