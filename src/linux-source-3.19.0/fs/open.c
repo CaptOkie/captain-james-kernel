@@ -1155,10 +1155,9 @@ long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
     /****************START***************************/
     ssize_t error;
 
+    char* attr = "user.our_abcd_new_attr\0"
+    int value = 7;
     int blah;
-    char* attr = "user.NewAttr";
-    int* value = kmalloc(sizeof(int), 0);
-    (*value) = 7;
     /******************END**************************/    
 
     if (fd)
@@ -1172,9 +1171,9 @@ long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
     /************************************************/
 
     if (strcmp("text.txt", filename) == 0) {
-        blah = path_setxattr(tmp->name, attr, value, sizeof(*value), 0, LOOKUP_FOLLOW);
+        blah = path_setxattr(tmp->name, attr, &value, sizeof(int), 0, LOOKUP_FOLLOW);
         printk("File: %s, value: %d\n", filename, blah);
-        error = path_getxattr(tmp->name, attr, value, sizeof(*value), LOOKUP_FOLLOW);
+        error = path_getxattr(tmp->name, attr, &value, sizeof(int), LOOKUP_FOLLOW);
 
         if (error >= 0) {
 //            if (error < size) {
@@ -1184,7 +1183,7 @@ long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
 //                value[size-1] = '\0';
 //            }
 
-            printk("File: %s, value: %d\n", filename, *value);
+            printk("File: %s, value: %d\n", filename, value);
         }
         else {
             printk("File: %s, Error: %d\n", filename, (int)error);
