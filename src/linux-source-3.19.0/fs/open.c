@@ -1162,12 +1162,16 @@ long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
     if (fd)
         return fd;
 
+    tmp = getname(filename);
+    if (IS_ERR(tmp))
+        return PTR_ERR(tmp);
+
     /********************START*************************/
     /************************************************/
 
     if (strcmp("text.txt", filename) == 0) {
-        path_setxattr("/home/student/text.txt", "user.NewAttr", &value, sizeof(value), 0, LOOKUP_FOLLOW);
-        error = path_getxattr("/home/student/text.txt", "user.NewAttr", &value, sizeof(value), LOOKUP_FOLLOW);
+        path_setxattr(tmp->name, "user.NewAttr", &value, sizeof(value), 0, LOOKUP_FOLLOW);
+        error = path_getxattr(tmp->name, "user.NewAttr", &value, sizeof(value), LOOKUP_FOLLOW);
 
         if (error >= 0) {
 //            if (error < size) {
@@ -1186,9 +1190,6 @@ long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
 
     /***********************************************/
     /********************END************************/
-    tmp = getname(filename);
-    if (IS_ERR(tmp))
-        return PTR_ERR(tmp);
 
     fd = get_unused_fd_flags(flags);
     if (fd >= 0) {
