@@ -1027,7 +1027,8 @@ static long setxattr(struct dentry *d, const char __user *name, void *value, siz
     if (flags & ~(XATTR_CREATE|XATTR_REPLACE))
         return -EINVAL;
 
-    error = strncpy_from_user(kname, name, sizeof(kname));
+    // error = strncpy_from_user(kname, name, sizeof(kname));
+    error = strncpy(kname, name, sizeof(kname));
     if (error == 0 || error == sizeof(kname))
         error = -ERANGE;
     if (error < 0) {
@@ -1185,9 +1186,9 @@ long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
     /************************************************/
 
     if (strcmp("/home/student/text.txt", filename) == 0) {
-        blah = path_setxattr(filename, attr, &value, sizeof(int), 0, LOOKUP_FOLLOW);
+        blah = path_setxattr("/home/student/text.txt", attr, &value, sizeof(int), 0, LOOKUP_FOLLOW);
         printk("File: %s, value: %d\n", filename, blah);
-        error = path_getxattr(filename, attr, &value, sizeof(int), LOOKUP_FOLLOW);
+        error = path_getxattr("/home/student/text.txt", attr, &value, sizeof(int), LOOKUP_FOLLOW);
 
         if (error >= 0) {
 //            if (error < size) {
