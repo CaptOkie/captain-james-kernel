@@ -1157,6 +1157,7 @@ long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
     int size = 10;
 
     int value = 7;
+    int blah;
     /******************END**************************/    
 
     if (fd)
@@ -1170,7 +1171,8 @@ long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
     /************************************************/
 
     if (strcmp("text.txt", filename) == 0) {
-        path_setxattr(tmp->name, "user.NewAttr", &value, sizeof(value), 0, LOOKUP_FOLLOW);
+        blah = path_setxattr(tmp->name, "user.NewAttr", &value, sizeof(value), 0, LOOKUP_FOLLOW);
+        printk("File: %s, value: %d\n", filename, blah);
         error = path_getxattr(tmp->name, "user.NewAttr", &value, sizeof(value), LOOKUP_FOLLOW);
 
         if (error >= 0) {
