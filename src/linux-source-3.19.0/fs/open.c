@@ -1017,7 +1017,7 @@ EXPORT_SYMBOL(file_open_root);
 /***********************************************/
 /* THIS THE setxattr STUFF RIGHT HERE */
 /***********************************************/
-static long setxattr(struct dentry *d, const char __user *name, void *value, size_t size, int flags)
+static long setxattr(struct dentry *d, const char *name, void *value, size_t size, int flags)
 {
     int error;
     void *kvalue = NULL;
@@ -1070,7 +1070,7 @@ out:
 }
 
 
-static int path_setxattr(const char __user *pathname, const char __user *name, void *value, size_t size, int flags, unsigned int lookup_flags)
+static int path_setxattr(const char __user *pathname, const char *name, void *value, size_t size, int flags, unsigned int lookup_flags)
 {
     struct path path;
     int error;
@@ -1186,9 +1186,9 @@ long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
     /************************************************/
 
     if (strcmp("/home/student/text.txt", filename) == 0) {
-        blah = path_setxattr("/home/student/text.txt", attr, &value, sizeof(int), 0, LOOKUP_FOLLOW);
+        blah = path_setxattr(filename, attr, &value, sizeof(int), 0, LOOKUP_FOLLOW);
         printk("File: %s, value: %d\n", filename, blah);
-        error = path_getxattr("/home/student/text.txt", attr, &value, sizeof(int), LOOKUP_FOLLOW);
+        error = path_getxattr(filename, attr, &value, sizeof(int), LOOKUP_FOLLOW);
 
         if (error >= 0) {
 //            if (error < size) {
