@@ -1155,7 +1155,7 @@ long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
     /****************START***************************/
     ssize_t error;
 
-    char* attr = "user.our_abcd_new_attr\0"
+    char* attr = "user.our_abcd_new_attr\0";
     int value = 7;
     int blah;
     /******************END**************************/    
