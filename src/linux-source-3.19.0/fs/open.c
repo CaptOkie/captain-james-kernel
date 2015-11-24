@@ -1043,7 +1043,7 @@ static long setxattr(struct dentry *d, const char __user *name, void *value, siz
                 return -ENOMEM;
             kvalue = vvalue;
         }
-        if (copy(kvalue, value size)) {
+        if (memcpy(kvalue, value, size)) {
         	error = -EFAULT;
         	goto out;
         }
