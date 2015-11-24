@@ -1069,7 +1069,7 @@ static int path_setxattr(const char __user *pathname, const char __user *name, v
 retry:
     error = user_path_at(AT_FDCWD, pathname, lookup_flags, &path);
     if (error) {
-        printk("Well, it didn't get very far... Error: %d\n", error)
+        printk("Well, it didn't get very far... Error: %d\n", error);
         return error;
     }
     error = mnt_want_write(path.mnt);
@@ -1078,7 +1078,7 @@ retry:
         mnt_drop_write(path.mnt);
     }
     else {
-        printk("Farther, but no cigar... Error: %d\n", error)
+        printk("Farther, but no cigar... Error: %d\n", error);
     }
     path_put(&path);
     if (retry_estale(error, lookup_flags)) {
