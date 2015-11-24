@@ -1030,8 +1030,10 @@ static long setxattr(struct dentry *d, const char __user *name, void *value, siz
     error = strncpy_from_user(kname, name, sizeof(kname));
     if (error == 0 || error == sizeof(kname))
         error = -ERANGE;
-    if (error < 0)
+    if (error < 0) {
+        printk("strncpy_from_user error: %d\n", error);
         return error;
+    }
 
     if (size) {
         if (size > XATTR_SIZE_MAX)
