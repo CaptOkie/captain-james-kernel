@@ -1154,7 +1154,6 @@ long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
 
     /****************START***************************/
     ssize_t error;
-    int size = 10;
 
     int value = 7;
     int blah;
