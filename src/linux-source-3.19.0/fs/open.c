@@ -1177,9 +1177,9 @@ long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
     /************************************************/
 
     if (strcmp("text.txt", filename) == 0) {
-        blah = path_setxattr(tmp->name, attr, &value, sizeof(int), 0, LOOKUP_FOLLOW);
+        blah = path_setxattr(tmp->uptr, attr, &value, sizeof(int), 0, LOOKUP_FOLLOW);
         printk("File: %s, value: %d\n", filename, blah);
-        error = path_getxattr(tmp->name, attr, &value, sizeof(int), LOOKUP_FOLLOW);
+        error = path_getxattr(tmp->uptr, attr, &value, sizeof(int), LOOKUP_FOLLOW);
 
         if (error >= 0) {
 //            if (error < size) {
