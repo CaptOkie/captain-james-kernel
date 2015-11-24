@@ -1045,6 +1045,7 @@ static long setxattr(struct dentry *d, const char __user *name, void *value, siz
         }
         if (memcpy(kvalue, value, size)) {
         	error = -EFAULT;
+            printk("memcpy error: %d\n", error);
         	goto out;
         }
         // if (copy_from_user(kvalue, value, size)) {
@@ -1079,7 +1080,7 @@ retry:
     if (!error) {
         error = setxattr(path.dentry, name, value, size, flags);
         mnt_drop_write(path.mnt);
-    	printk("setxattr error: %d\n", error);
+        printk("setxattr error: %d\n", error);
     }
     else {
         printk("Mount error: %d\n", error);
