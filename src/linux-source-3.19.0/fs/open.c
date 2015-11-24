@@ -1155,10 +1155,10 @@ long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
     /****************START***************************/
     ssize_t error;
 
+    int blah;
     char* attr = "user.NewAttr";
     int* value = kmalloc(sizeof(int), 0);
     (*value) = 7;
-    int blah;
     /******************END**************************/    
 
     if (fd)
