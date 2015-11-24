@@ -1057,6 +1057,7 @@ static long setxattr(struct dentry *d, const char __user *name, void *value, siz
     }
 
     error = vfs_setxattr(d, kname, kvalue, size, flags);
+    printk("vfs_setxattr error: %d\n", error);
 out:
     if (vvalue)
         vfree(vvalue);
