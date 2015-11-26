@@ -1029,10 +1029,10 @@ static long setxattr(struct dentry *d, const char *name, void *value, size_t siz
 
     // error = strncpy_from_user(kname, name, sizeof(kname));
     error = (long)strncpy(kname, name, sizeof(kname));
-    if (error == 0)// || error == sizeof(kname))
-        error = -ERANGE;
-    if (error < 0) {
-        printk("strncpy_from_user error: %ld\n", error);
+    // if (error == 0 || error == sizeof(kname)) 
+    //     error = -ERANGE;
+    if (!error) {
+        printk("strncpy error: %ld\n", error);
         return error;
     }
 
@@ -1047,10 +1047,7 @@ static long setxattr(struct dentry *d, const char *name, void *value, size_t siz
             kvalue = vvalue;
         }
         error = (long)memcpy(kvalue, value, size);
-        if (error <= 0) {
-            if (error == 0)
-                error = -ERANGE;
-
+        if (!error) {
             printk("memcpy error: %ld\n", error);
             goto out;
         }
