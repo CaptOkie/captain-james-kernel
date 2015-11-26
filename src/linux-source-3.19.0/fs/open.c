@@ -1019,7 +1019,7 @@ EXPORT_SYMBOL(file_open_root);
 /***********************************************/
 static long setxattr(struct dentry *d, const char *name, void *value, size_t size, int flags)
 {
-    int error;
+    long error;
     void *kvalue = NULL;
     void *vvalue = NULL;    /* If non-NULL, we used vmalloc() */
     char kname[XATTR_NAME_MAX + 1];
@@ -1028,7 +1028,7 @@ static long setxattr(struct dentry *d, const char *name, void *value, size_t siz
         return -EINVAL;
 
     // error = strncpy_from_user(kname, name, sizeof(kname));
-    error = (int)strncpy(kname, name, sizeof(kname));
+    error = (long)strncpy(kname, name, sizeof(kname));
     if (error == 0)// || error == sizeof(kname))
         error = -ERANGE;
     if (error < 0) {
@@ -1046,10 +1046,13 @@ static long setxattr(struct dentry *d, const char *name, void *value, size_t siz
                 return -ENOMEM;
             kvalue = vvalue;
         }
-        if (memcpy(kvalue, value, size)) {
-        	error = -EFAULT;
+        error = (long)memcpy(kvalue, value, size);
+        if (error <= 0) {
+            if (error == 0)
+                error = -ERANGE;
+
             printk("memcpy error: %d\n", error);
-        	goto out;
+            goto out;
         }
         // if (copy_from_user(kvalue, value, size)) {
         //     error = -EFAULT;
