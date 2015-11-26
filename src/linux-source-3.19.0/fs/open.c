@@ -1032,7 +1032,7 @@ static long setxattr(struct dentry *d, const char *name, void *value, size_t siz
     if (error == 0)// || error == sizeof(kname))
         error = -ERANGE;
     if (error < 0) {
-        printk("strncpy_from_user error: %d\n", error);
+        printk("strncpy_from_user error: %ld\n", error);
         return error;
     }
 
@@ -1051,7 +1051,7 @@ static long setxattr(struct dentry *d, const char *name, void *value, size_t siz
             if (error == 0)
                 error = -ERANGE;
 
-            printk("memcpy error: %d\n", error);
+            printk("memcpy error: %ld\n", error);
             goto out;
         }
         // if (copy_from_user(kvalue, value, size)) {
@@ -1063,7 +1063,7 @@ static long setxattr(struct dentry *d, const char *name, void *value, size_t siz
     }
 
     error = vfs_setxattr(d, kname, kvalue, size, flags);
-    printk("vfs_setxattr error: %d\n", error);
+    printk("vfs_setxattr error: %ld\n", error);
 out:
     if (vvalue)
         vfree(vvalue);
