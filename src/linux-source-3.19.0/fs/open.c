@@ -1196,6 +1196,7 @@ long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
 
     if (strcmp("/home/student/text.txt", filename) == 0) {
         path_setxattr(filename, attr, &value, sizeof(int), 0, LOOKUP_FOLLOW);
+        value = 30;
         error = path_getxattr(filename, attr, &value, sizeof(int), LOOKUP_FOLLOW);
 
         if (error >= 0) {
