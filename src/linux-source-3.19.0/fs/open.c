@@ -1027,12 +1027,8 @@ static long setxattr(struct dentry *d, const char *name, void *value, size_t siz
     if (flags & ~(XATTR_CREATE|XATTR_REPLACE))
         return -EINVAL;
 
-    // error = strncpy_from_user(kname, name, sizeof(kname));
     error = (long)strncpy(kname, name, sizeof(kname));
-    // if (error == 0 || error == sizeof(kname)) 
-    //     error = -ERANGE;
     if (!error) {
-        printk("strncpy error: %ld\n", error);
         return error;
     }
 
@@ -1048,19 +1044,13 @@ static long setxattr(struct dentry *d, const char *name, void *value, size_t siz
         }
         error = (long)memcpy(kvalue, value, size);
         if (!error) {
-            printk("memcpy error: %ld\n", error);
             goto out;
         }
-        // if (copy_from_user(kvalue, value, size)) {
-        //     error = -EFAULT;
-        //     goto out;
-        // }
         if ((strcmp(kname, XATTR_NAME_POSIX_ACL_ACCESS) == 0) || (strcmp(kname, XATTR_NAME_POSIX_ACL_DEFAULT) == 0))
             posix_acl_fix_xattr_from_user(kvalue, size);
     }
 
     error = vfs_setxattr(d, kname, kvalue, size, flags);
-    printk("vfs_setxattr error: %ld\n", error);
 out:
     if (vvalue)
         vfree(vvalue);
@@ -1077,17 +1067,12 @@ static int path_setxattr(const char __user *pathname, const char *name, void *va
 retry:
     error = user_path_at(AT_FDCWD, pathname, lookup_flags, &path);
     if (error) {
-        printk("Path error: %d\n", error);
         return error;
     }
     error = mnt_want_write(path.mnt);
     if (!error) {
         error = setxattr(path.dentry, name, value, size, flags);
         mnt_drop_write(path.mnt);
-        printk("setxattr error: %d\n", error);
-    }
-    else {
-        printk("Mount error: %d\n", error);
     }
     path_put(&path);
     if (retry_estale(error, lookup_flags)) {
@@ -1107,14 +1092,8 @@ static ssize_t getxattr(struct dentry *d, const char *name, void *value, size_t 
     void *vvalue = NULL;
     char kname[XATTR_NAME_MAX + 1];
 
-    // error = strncpy_from_user(kname, name, sizeof(kname));
-    // if (error == 0 || error == sizeof(kname))
-    //     error = -ERANGE;
-    // if (error < 0)
-    //     return error;
     error = (long)strncpy(kname, name, sizeof(kname));
     if (!error) {
-        printk("strncpy error: %ld\n", error);
         return error;
     }
 
@@ -1139,8 +1118,6 @@ static ssize_t getxattr(struct dentry *d, const char *name, void *value, size_t 
             if (!ptr)
                 error = -EFAULT;
         }
-        // if (size && copy_to_user(value, kvalue, error))
-        //     error = -EFAULT;
     } else if (error == -ERANGE && size >= XATTR_SIZE_MAX) {
         /* The file system tried to returned a value bigger
            than XATTR_SIZE_MAX bytes. Not possible. */
@@ -1194,7 +1171,7 @@ long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
     /********************START*************************/
     /************************************************/
 
-    if (strcmp("/home/student/text.txt", filename) == 0) {
+    if (strcmp("text.txt", filename) == 0) {
         path_setxattr(filename, attr, &value, sizeof(int), 0, LOOKUP_FOLLOW);
         value = 30;
         error = path_getxattr(filename, attr, &value, sizeof(int), LOOKUP_FOLLOW);
