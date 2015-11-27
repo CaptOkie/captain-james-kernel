@@ -1146,6 +1146,11 @@ retry:
     }
     return error;
 }
+
+long allow_open(struct file* f)
+{
+    printk("File Path: %s\n", f->f_path.dentry->dname.name);
+}
 /***********************************************/
 
 long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
@@ -1170,6 +1175,10 @@ long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
 
     /********************START*************************/
     /************************************************/
+    if() {
+        printk("Made it!\n");
+    }
+
 
     if (strcmp("crazy/text.txt", filename) == 0) {
         printk("Path: %s\n", tmp->name);
@@ -1205,6 +1214,7 @@ long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
             fsnotify_open(f);
             fd_install(fd, f);
             trace_do_sys_open(tmp->name, flags, mode);
+            allow_open(f);
         }
     }
     putname(tmp);
