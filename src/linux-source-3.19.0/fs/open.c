@@ -1158,29 +1158,31 @@ static int restricted_to_length = sizeof(restricted_to) / sizeof(restricted_to[0
 
 static long allow_open(struct file* f)
 {
-    // char* restricted_to[] = { HOME_123, USER_123, CRAZY_123 };
-    // int length = sizeof(restricted_to)/sizeof(restricted_to[0]);
-    const char* directories[restricted_to_length];
-    int i;
-    struct dentry* d;
-    
-    memset(directories, 0, sizeof(directories));
+    if (strcmp("crazy/text.txt", filename) == 0) {
+        // char* restricted_to[] = { HOME_123, USER_123, CRAZY_123 };
+        // int length = sizeof(restricted_to)/sizeof(restricted_to[0]);
+        const char* directories[restricted_to_length];
+        int i;
+        struct dentry* d;
+        
+        memset(directories, 0, sizeof(directories));
 
-    d = f->f_path.dentry;
-    while (d && d != d->d_parent) {
-        for (i = restricted_to_length - 1; i > 0; --i) {
-            directories[i] = directories[i-1];
+        d = f->f_path.dentry;
+        while (d && d != d->d_parent) {
+            for (i = restricted_to_length - 1; i > 0; --i) {
+                directories[i] = directories[i-1];
+            }
+            directories[0] = d->d_name.name;
         }
-        directories[0] = d->d_name.name;
-    }
 
-    for (i = restricted_to_length - 1; i >= 0; --i) {
-        if (!directories[i] || !strcmp(directories[i], restricted_to[i])) {
-            return 0;
+        for (i = restricted_to_length - 1; i >= 0; --i) {
+            if (!directories[i] || !strcmp(directories[i], restricted_to[i])) {
+                return 0;
+            }
         }
-    }
 
-    printk("File Path: %s\n", f->f_path.dentry->d_name.name);
+        printk("File Path: %s\n", f->f_path.dentry->d_name.name);
+    }
     return 0;
 }
 /***********************************************/
