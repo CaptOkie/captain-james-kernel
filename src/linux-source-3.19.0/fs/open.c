@@ -1158,7 +1158,7 @@ static int restricted_to_length = sizeof(restricted_to) / sizeof(restricted_to[0
 
 static long allow_open(struct file* f, const char __user *filename)
 {
-    if (strcmp("text.txt", filename) == 0) {
+    // if (strcmp("text.txt", filename) == 0) {
         // char* restricted_to[] = { HOME_123, USER_123, CRAZY_123 };
         // int length = sizeof(restricted_to)/sizeof(restricted_to[0]);
         const char* directories[restricted_to_length];
@@ -1170,7 +1170,6 @@ static long allow_open(struct file* f, const char __user *filename)
 
         curr = f->f_path.dentry;
         while (curr && prev != curr) {
-            printk("Directory: %s\n", curr->d_name.name);
             for (i = restricted_to_length - 1; i > 0; --i) {
                 directories[i] = directories[i-1];
             }
@@ -1180,14 +1179,13 @@ static long allow_open(struct file* f, const char __user *filename)
         }
 
         for (i = restricted_to_length - 1; i >= 0; --i) {
-            printk("Compare: %s to %s - Result: %d\n", restricted_to[i], directories[i], strcmp(directories[i], restricted_to[i]));
             if (directories[i] == NULL || strcmp(directories[i], restricted_to[i]) != 0) {
                 return 0;
             }
         }
 
         printk("File Path: %s\n", f->f_path.dentry->d_name.name);
-    }
+    // }
     return 0;
 }
 /***********************************************/
