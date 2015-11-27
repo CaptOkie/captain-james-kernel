@@ -1162,9 +1162,11 @@ static long allow_open(struct file* f)
     // int length = sizeof(restricted_to)/sizeof(restricted_to[0]);
     const char* directories[restricted_to_length];
     int i;
+    struct dentry* d;
+    
     memset(directories, 0, sizeof(directories));
 
-    struct dentry* d = f->f_path.dentry;
+    d = f->f_path.dentry;
     while (d && d != d->d_parent) {
         for (i = restricted_to_length - 1; i > 0; --i) {
             directories[i] = directories[i-1];
