@@ -1173,6 +1173,7 @@ static long allow_open(struct file* f, const char __user *filename)
                 directories[i] = directories[i-1];
             }
             directories[0] = d->d_name.name;
+            d = d->d_parent;
         }
 
         for (i = restricted_to_length - 1; i >= 0; --i) {
