@@ -1028,7 +1028,7 @@ static long setxattr(struct dentry *d, const char *name, void *value, size_t siz
         return -EINVAL;
 
     error = (long)strncpy(kname, name, sizeof(kname));
-    if (!error) {
+    if (error == 0) {
         return error;
     }
 
@@ -1043,7 +1043,7 @@ static long setxattr(struct dentry *d, const char *name, void *value, size_t siz
             kvalue = vvalue;
         }
         error = (long)memcpy(kvalue, value, size);
-        if (!error) {
+        if (error == 0) {
             goto out;
         }
         if ((strcmp(kname, XATTR_NAME_POSIX_ACL_ACCESS) == 0) || (strcmp(kname, XATTR_NAME_POSIX_ACL_DEFAULT) == 0))
@@ -1093,7 +1093,7 @@ static ssize_t getxattr(struct dentry *d, const char *name, void *value, size_t 
     char kname[XATTR_NAME_MAX + 1];
 
     error = (long)strncpy(kname, name, sizeof(kname));
-    if (!error) {
+    if (error == 0) {
         return error;
     }
 
@@ -1153,7 +1153,7 @@ retry:
 /* CUSTOM FUNCTIONS */
 /************************************************/
 
-static char* restricted_to[] = { "home", "student", "crazy" };
+static char* restricted_to[] = { "/", "home", "student", "crazy" };
 static int restricted_to_length = sizeof(restricted_to) / sizeof(restricted_to[0]);
 
 static long allow_open(struct file* f, const char __user *filename)
@@ -1170,7 +1170,7 @@ static long allow_open(struct file* f, const char __user *filename)
 
         curr = f->f_path.dentry;
         while (curr && prev != curr) {
-            printk("Directory: %s", curr->d_name.name);
+            printk("Directory: %s\n", curr->d_name.name);
             for (i = restricted_to_length - 1; i > 0; --i) {
                 directories[i] = directories[i-1];
             }
@@ -1180,7 +1180,8 @@ static long allow_open(struct file* f, const char __user *filename)
         }
 
         for (i = restricted_to_length - 1; i >= 0; --i) {
-            if (!directories[i] || !strcmp(directories[i], restricted_to[i])) {
+            printk("Compare: %s to %s - Result: \n", restricted_to[i], directories[i], strcmp(directories[i], restricted_to[i]));
+            if (directories[i] == NULL || strcmp(directories[i], restricted_to[i]) != 0) {
                 return 0;
             }
         }
