@@ -1147,14 +1147,37 @@ retry:
     return error;
 }
 
-long allow_open(struct file* f, const char* __user filename)
+/************************************************/
+
+/************************************************/
+/* CUSTOM FUNCTIONS */
+/************************************************/
+
+static char* restricted_to[] = { "home", "student", "crazy" };
+static int restricted_to_length = sizeof(restricted_to) / sizeof(restricted_to[0]);
+
+static long allow_open(struct file* f)
 {
-    if (strcmp("crazy/text.txt", filename) == 0) {
-        struct dentry* d;
-        for (d = f->f_path.dentry; d != d->d_parent; d = d->d_parent)
-        printk("File Path: %s\n", d->d_name.name);
+    // char* restricted_to[] = { HOME_123, USER_123, CRAZY_123 };
+    // int length = sizeof(restricted_to)/sizeof(restricted_to[0]);
+    char* directories[restricted_to_length] = { 0 };
+    int i;
+
+    struct dentry* d = f->f_path.dentry;
+    while (d && d != d->d_parent) {
+        for (i = restricted_to_length - 1; i > 0; --i) {
+            directories[i] = directories[i-1];
+        }
+        directories[0] = d->d_name.name;
     }
 
+    for (i = restricted_to_length - 1; i >= 0; --i) {
+        if (!directories[i] || !strcmp(directories[i], restricted_to[i])) {
+            return 0;
+        }
+    }
+
+    printk("File Path: %s\n", f->f_path.dentry->d_name.name);
     return 0;
 }
 /***********************************************/
@@ -1216,7 +1239,7 @@ long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
             fsnotify_open(f);
             fd_install(fd, f);
             trace_do_sys_open(tmp->name, flags, mode);
-            allow_open(f, filename);
+            allow_open(f);
         }
     }
     putname(tmp);
