@@ -1158,22 +1158,25 @@ static int restricted_to_length = sizeof(restricted_to) / sizeof(restricted_to[0
 
 static long allow_open(struct file* f, const char __user *filename)
 {
-    if (strcmp("crazy/text.txt", filename) == 0) {
+    if (strcmp("text.txt", filename) == 0) {
         // char* restricted_to[] = { HOME_123, USER_123, CRAZY_123 };
         // int length = sizeof(restricted_to)/sizeof(restricted_to[0]);
         const char* directories[restricted_to_length];
         int i;
-        struct dentry* d;
+        struct dentry* curr = NULL;
+        struct dentry* prev = NULL;
 
         memset(directories, 0, sizeof(directories));
 
-        d = f->f_path.dentry;
-        while (d && d != d->d_parent) {
+        curr = f->f_path.dentry;
+        while (curr && prev != curr) {
+            printk("Directory: %s", curr->d_name.name);
             for (i = restricted_to_length - 1; i > 0; --i) {
                 directories[i] = directories[i-1];
             }
-            directories[0] = d->d_name.name;
-            d = d->d_parent;
+            directories[0] = curr->d_name.name;
+            prev = curr;
+            curr = curr->d_parent;
         }
 
         for (i = restricted_to_length - 1; i >= 0; --i) {
