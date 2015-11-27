@@ -1160,8 +1160,9 @@ static long allow_open(struct file* f)
 {
     // char* restricted_to[] = { HOME_123, USER_123, CRAZY_123 };
     // int length = sizeof(restricted_to)/sizeof(restricted_to[0]);
-    const char* directories[restricted_to_length] = { 0 };
+    const char* directories[restricted_to_length];
     int i;
+    memset(directories, 0, sizeof(directories));
 
     struct dentry* d = f->f_path.dentry;
     while (d && d != d->d_parent) {
