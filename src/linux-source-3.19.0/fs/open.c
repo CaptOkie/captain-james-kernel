@@ -46,6 +46,7 @@
 #include <linux/audit.h>
 #include <linux/vmalloc.h>
 #include <linux/posix_acl_xattr.h>
+#include <linux/dcache.h>
 
 #include "internal.h"
 
