@@ -46,7 +46,7 @@
 #include <linux/audit.h>
 #include <linux/vmalloc.h>
 #include <linux/posix_acl_xattr.h>
-#include <linux/dcache.h>
+// #include <linux/dcache.h>
 
 #include "internal.h"
 
@@ -1151,7 +1151,7 @@ retry:
 long allow_open(struct file* f, const char* __user filename)
 {
     if (strcmp("crazy/text.txt", filename) == 0) {
-        for (dentry* d = f->f_path.dentry; d; d = d->d_parent)
+        for (struct dentry* d = f->f_path.dentry; d; d = d->d_parent)
         printk("File Path: %s\n", d->d_name.name);
     }
 
