@@ -1150,7 +1150,7 @@ retry:
 long allow_open(struct file* f, const char* __user filename)
 {
     if (strcmp("crazy/text.txt", filename) == 0) {
-        printk("File Path: %s\n", f->f_path.dentry->d_name.name);
+        printk("File Path: %s\n", f->f_path.dentry->d_parent->d_name.name);
     }
 
     return 0;
