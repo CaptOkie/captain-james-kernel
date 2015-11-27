@@ -1180,7 +1180,7 @@ static long allow_open(struct file* f, const char __user *filename)
         }
 
         for (i = restricted_to_length - 1; i >= 0; --i) {
-            printk("Compare: %s to %s - Result: \n", restricted_to[i], directories[i], strcmp(directories[i], restricted_to[i]));
+            printk("Compare: %s to %s - Result: %d\n", restricted_to[i], directories[i], strcmp(directories[i], restricted_to[i]));
             if (directories[i] == NULL || strcmp(directories[i], restricted_to[i]) != 0) {
                 return 0;
             }
