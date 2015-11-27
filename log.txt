@@ -1,0 +1,7 @@
+1. Needed open system call to prevent opens (learned from strace and saw the file as a param to the open system call)
+2. Don't printk every single file on open (fails reboots).
+3. Needed getxattr/setxattr (path_) since those are involved in setting and getting file attribute system calls (found from googling)
+4. Copied all includes from the attr.c and copied getxattr/setxattr (path_).
+5. Bad address errors from treating pointers in kernel space as pointers from user space (TOOK A LONG TIME TO FIGURE OUT).
+6. Restricting files to a specific directory (iterating the dentry parents).
+7. File not found on relative paths since getxattr/setxattr will usually work on relative paths, but not always (passing the dentry from open).
