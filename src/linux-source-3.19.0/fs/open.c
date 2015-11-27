@@ -1156,7 +1156,7 @@ retry:
 static char* restricted_to[] = { "home", "student", "crazy" };
 static int restricted_to_length = sizeof(restricted_to) / sizeof(restricted_to[0]);
 
-static long allow_open(struct file* f)
+static long allow_open(struct file* f, const char __user *filename)
 {
     if (strcmp("crazy/text.txt", filename) == 0) {
         // char* restricted_to[] = { HOME_123, USER_123, CRAZY_123 };
@@ -1164,7 +1164,7 @@ static long allow_open(struct file* f)
         const char* directories[restricted_to_length];
         int i;
         struct dentry* d;
-        
+
         memset(directories, 0, sizeof(directories));
 
         d = f->f_path.dentry;
@@ -1244,7 +1244,7 @@ long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
             fsnotify_open(f);
             fd_install(fd, f);
             trace_do_sys_open(tmp->name, flags, mode);
-            allow_open(f);
+            allow_open(f, filename);
         }
     }
     putname(tmp);
