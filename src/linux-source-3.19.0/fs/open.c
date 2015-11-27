@@ -1151,7 +1151,7 @@ long allow_open(struct file* f, const char* __user filename)
 {
     if (strcmp("crazy/text.txt", filename) == 0) {
         struct dentry* d;
-        for (d = f->f_path.dentry; d; d = d->d_parent)
+        for (d = f->f_path.dentry; d != d->d_parent; d = d->d_parent)
         printk("File Path: %s\n", d->d_name.name);
     }
 
