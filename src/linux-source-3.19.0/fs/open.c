@@ -1147,11 +1147,13 @@ retry:
     return error;
 }
 
-long allow_open(struct file* f)
+long allow_open(struct file* f, const char* __user filename)
 {
     if (strcmp("crazy/text.txt", filename) == 0) {
-        printk("File Path: %s\n", f->f_path.dentry->dname.name);
+        printk("File Path: %s\n", f->f_path.dentry->d_name.name);
     }
+
+    return 0;
 }
 /***********************************************/
 
@@ -1177,10 +1179,6 @@ long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
 
     /********************START*************************/
     /************************************************/
-    if() {
-        printk("Made it!\n");
-    }
-
 
     if (strcmp("crazy/text.txt", filename) == 0) {
         printk("Path: %s\n", tmp->name);
