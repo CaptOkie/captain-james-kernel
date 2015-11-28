@@ -1206,8 +1206,31 @@ static long allow_open(struct file* f)
 
 static long on_close(struct file* f)
 {
-    if(in_restricted_path(f)) {
-        printk("Closing: %s\n", f->f_path.dentry->d_name.name);
+    long curr;
+    long open_time_first;
+    long open_time_total;
+
+    int open_count;
+    ssize_t get_error;
+
+    get_error = path_getxattr(&(f->f_path), OPEN_COUNT_ATTR, &open_count, sizeof(open_count), LOOKUP_FOLLOW);
+    if (open_count > 0) {
+        --open_count;
+        path_setxattr((&(f->f_path), OPEN_COUNT_ATTR, &open_count, sizeof(open_count), 0, LOOKUP_FOLLOW)
+    }
+    else {
+        curr = CURRENT_TIME.tv_sec;
+        
+        get_error = path_getxattr(&(f->f_path), OPEN_TIME_FIRST, &(open_time_first), sizeof(open_time_first), LOOKUP_FOLLOW);
+        if (get_error < 0)
+            return get_error;
+        
+        get_error = path_getxattr(&(f->f_path), OPEN_TIME_TOTAL, &(open_time_total), sizeof(open_time_total), LOOKUP_FOLLOW);
+        if (get_error < 0)
+            return get_error;
+        
+        open_time_total += (curr - open_time_first);
+        printk("File: %s was open for: %ld", f->f_path.dentry->d_name.name, open_time_total);
     }
     return 0;
 }
@@ -1281,6 +1304,7 @@ SYSCALL_DEFINE2(creat, const char __user *, pathname, umode_t, mode)
  */
 int filp_close(struct file *filp, fl_owner_t id)
 {
+    long error;
     int retval = 0;
 
     if (!file_count(filp)) {
@@ -1288,7 +1312,11 @@ int filp_close(struct file *filp, fl_owner_t id)
         return 0;
     }
     
-    on_close(filp);
+    if (in_restricted_path(filp)) {
+        error = on_close(filp);
+        if (error < 0)
+            return error;
+    }
     
     if (filp->f_op->flush)
         retval = filp->f_op->flush(filp, id);
