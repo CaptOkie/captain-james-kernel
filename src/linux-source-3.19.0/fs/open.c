@@ -1244,28 +1244,25 @@ static long on_close(struct file* f)
     long open_count;
     ssize_t get_error;
 
-    get_error = path_getxattr(&(f->f_path), OPEN_COUNT_ATTR, &open_count, sizeof(open_count), LOOKUP_FOLLOW);
+    get_error = long_getxattr(&(f->f_path), OPEN_COUNT_ATTR, &open_count);
     if (get_error <= 0)
         return get_error;
 
-    printk("Open count before decrease: %d\n", open_count);
     if (open_count > 0) {
         --open_count;
-        path_setxattr(&(f->f_path), OPEN_COUNT_ATTR, &open_count, sizeof(open_count), 0, LOOKUP_FOLLOW);
-        printk("Open count after decrease: %d\n", open_count);
+        long_setxattr(&(f->f_path), OPEN_COUNT_ATTR, &open_count);
         if (open_count == 0) {
             curr = CURRENT_TIME.tv_sec;
             
-            get_error = path_getxattr(&(f->f_path), OPEN_TIME_FIRST, &(open_time_first), sizeof(open_time_first), LOOKUP_FOLLOW);
+            get_error = long_getxattr(&(f->f_path), OPEN_TIME_FIRST, &open_time_first);
+            if (get_error <= 0)
+                return get_error;
+
+            get_error = long_getxattr(&(f->f_path), OPEN_TIME_TOTAL, &open_time_total);
             if (get_error <= 0)
                 return get_error;
             
-            get_error = path_getxattr(&(f->f_path), OPEN_TIME_TOTAL, &(open_time_total), sizeof(open_time_total), LOOKUP_FOLLOW);
-            if (get_error <= 0)
-                return get_error;
-            
-            open_time_total += (curr - open_time_first);
-            printk("File: %s was open for: %ld\n", f->f_path.dentry->d_name.name, open_time_total);
+            printk("File: %s was open for: %ld\n", f->f_path.dentry->d_name.name, calc_open_time(curr, open_time_total, open_time_first));
         }
         else {
             printk("File: %s Open elsewhere.\n", f->f_path.dentry->d_name.name);
