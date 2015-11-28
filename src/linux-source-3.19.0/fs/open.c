@@ -1219,7 +1219,7 @@ static long allow_open(struct file* f)
     }
     
     if (open_time_total > MAX_OPEN_TIME) {
-        printk("Stopped Open: File: %s, Open Count: %d\n", f->f_path.dentry->d_name.name, open_count);
+        printk("Stopped Open: File: %s, Open Count: %ld\n", f->f_path.dentry->d_name.name, open_count);
         return -1;
     }
 
@@ -1231,7 +1231,7 @@ static long allow_open(struct file* f)
     ++open_count;
     long_setxattr(&(f->f_path), OPEN_COUNT_ATTR, &open_count);
 
-    printk("Allowed Open: File: %s, Open Count: %d\n", f->f_path.dentry->d_name.name, open_count);
+    printk("Allowed Open: File: %s, Open Count: %ld\n", f->f_path.dentry->d_name.name, open_count);
     return 0;
 }
 
