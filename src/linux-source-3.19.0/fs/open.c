@@ -1184,7 +1184,7 @@ static long allow_open(struct file* f)
     int open_count;
     ssize_t get_error;
 
-    if (!in_restricted_path(file)) {
+    if (!in_restricted_path(f)) {
         return 0;
     }
 

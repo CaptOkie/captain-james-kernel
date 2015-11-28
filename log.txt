@@ -8,3 +8,4 @@
 8. Modified path_getxattr and path_setxattr to take a path struct instead of a char* __user to fix the relative path problem.
    Removed the lines responsible for getting the path and freeing the path.
 9. Include time.h to get current time
+10. In filp_close because __close_fd, called in close, calls filp_close and we have the struct file* again.
