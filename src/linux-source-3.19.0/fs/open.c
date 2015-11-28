@@ -1142,23 +1142,18 @@ retry:
 /* CUSTOM FUNCTIONS */
 /************************************************/
 
-#define OPEN_TIME_TOTAL "user.open_time_total"
-#define OPEN_TIME_FIRST "user.open_time_first"
+#define OPEN_TIME_TOTAL "user.open_time_total" // secpnds
+#define OPEN_TIME_FIRST "user.open_time_first" // seconds
 #define OPEN_COUNT_ATTR "user.open_count_attr"
 static char* restricted_to[] = { "/", "home", "student", "crazy" };
 static int restricted_to_length = sizeof(restricted_to) / sizeof(restricted_to[0]);
 
-static long allow_open(struct file* f)
+static bool in_restricted_path(struct file* f)
 {
-    // char* restricted_to[] = { HOME_123, USER_123, CRAZY_123 };
-    // int length = sizeof(restricted_to)/sizeof(restricted_to[0]);
     const char* directories[restricted_to_length];
     int i;
     struct dentry* curr = NULL;
     struct dentry* prev = NULL;
-
-    int open_count;
-    ssize_t get_error;
 
     memset(directories, 0, sizeof(directories));
 
@@ -1174,18 +1169,40 @@ static long allow_open(struct file* f)
 
     for (i = restricted_to_length - 1; i >= 0; --i) {
         if (directories[i] == NULL || strcmp(directories[i], restricted_to[i]) != 0) {
-            return 0;
+            return false;
         }
     }
 
+    return true;
+}
+
+static long allow_open(struct file* f)
+{
+    struct timespec open_time_first;
+    long open_time_total;
+
+    int open_count;
+    ssize_t get_error;
+
+    if (!in_restricted_path(file)) {
+        return 0;
+    }
+
     get_error = path_getxattr(&(f->f_path), OPEN_COUNT_ATTR, &open_count, sizeof(open_count), LOOKUP_FOLLOW);
-    if (get_error < 0 || open_count == 0) {
+    if (get_error <= 0 || open_count == 0) {
         open_count = 0;
+
+        open_time_first = CURRENT_TIME;
+        path_setxattr(&(f->f_path), OPEN_TIME_FIRST, &(open_time_first.tv_sec), sizeof(open_time_first.tv_sec), 0, LOOKUP_FOLLOW);
+        
+        get_error = path_getxattr(&(f->f_path), OPEN_TIME_TOTAL, &open_time_total, sizeof(open_time_total), LOOKUP_FOLLOW);
+        if (get_error <= 0) {
+
+        }
     }
     ++open_count;
     path_setxattr(&(f->f_path), OPEN_COUNT_ATTR, &open_count, sizeof(open_count), 0, LOOKUP_FOLLOW);
 
-    printk("Current Time %ld\n", CURRENT_TIME.tv_sec);
     printk("File: %s, Open Count: %d\n", f->f_path.dentry->d_name.name, open_count);
     return 0;
 }
