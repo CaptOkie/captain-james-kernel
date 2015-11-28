@@ -1059,22 +1059,15 @@ out:
     return error;
 }
 
-
-static int path_setxattr(const char __user *pathname, const char *name, void *value, size_t size, int flags, unsigned int lookup_flags)
+static int path_setxattr(struct path* path, const char *name, void *value, size_t size, int flags, unsigned int lookup_flags)
 {
-    struct path path;
     int error;
 retry:
-    error = user_path_at(AT_FDCWD, pathname, lookup_flags, &path);
-    if (error) {
-        return error;
-    }
-    error = mnt_want_write(path.mnt);
+    error = mnt_want_write(path->mnt);
     if (!error) {
-        error = setxattr(path.dentry, name, value, size, flags);
-        mnt_drop_write(path.mnt);
+        error = setxattr(path->dentry, name, value, size, flags);
+        mnt_drop_write(path->mnt);
     }
-    path_put(&path);
     if (retry_estale(error, lookup_flags)) {
         lookup_flags |= LOOKUP_REVAL;
         goto retry;
@@ -1130,16 +1123,11 @@ static ssize_t getxattr(struct dentry *d, const char *name, void *value, size_t 
     return error;
 }
 
-static ssize_t path_getxattr(const char __user *pathname, const char *name, void *value, size_t size, unsigned int lookup_flags)
+static ssize_t path_getxattr(struct path* path, const char *name, void *value, size_t size, unsigned int lookup_flags)
 {
-    struct path path;
     ssize_t error;
 retry:
-    error = user_path_at(AT_FDCWD, pathname, lookup_flags, &path);
-    if (error)
-        return error;
-    error = getxattr(path.dentry, name, value, size);
-    path_put(&path);
+    error = getxattr(path->dentry, name, value, size);
     if (retry_estale(error, lookup_flags)) {
         lookup_flags |= LOOKUP_REVAL;
         goto retry;
@@ -1153,39 +1141,48 @@ retry:
 /* CUSTOM FUNCTIONS */
 /************************************************/
 
+#define OPEN_COUNT_ATTR "user.open_count_attr"
 static char* restricted_to[] = { "/", "home", "student", "crazy" };
 static int restricted_to_length = sizeof(restricted_to) / sizeof(restricted_to[0]);
 
-static long allow_open(struct file* f, const char __user *filename)
+static long allow_open(struct file* f)
 {
-    // if (strcmp("text.txt", filename) == 0) {
-        // char* restricted_to[] = { HOME_123, USER_123, CRAZY_123 };
-        // int length = sizeof(restricted_to)/sizeof(restricted_to[0]);
-        const char* directories[restricted_to_length];
-        int i;
-        struct dentry* curr = NULL;
-        struct dentry* prev = NULL;
+    // char* restricted_to[] = { HOME_123, USER_123, CRAZY_123 };
+    // int length = sizeof(restricted_to)/sizeof(restricted_to[0]);
+    const char* directories[restricted_to_length];
+    int i;
+    struct dentry* curr = NULL;
+    struct dentry* prev = NULL;
 
-        memset(directories, 0, sizeof(directories));
+    int open_count;
+    ssize_t get_error;
 
-        curr = f->f_path.dentry;
-        while (curr && prev != curr) {
-            for (i = restricted_to_length - 1; i > 0; --i) {
-                directories[i] = directories[i-1];
-            }
-            directories[0] = curr->d_name.name;
-            prev = curr;
-            curr = curr->d_parent;
+    memset(directories, 0, sizeof(directories));
+
+    curr = f->f_path.dentry;
+    while (curr && prev != curr) {
+        for (i = restricted_to_length - 1; i > 0; --i) {
+            directories[i] = directories[i-1];
         }
+        directories[0] = curr->d_name.name;
+        prev = curr;
+        curr = curr->d_parent;
+    }
 
-        for (i = restricted_to_length - 1; i >= 0; --i) {
-            if (directories[i] == NULL || strcmp(directories[i], restricted_to[i]) != 0) {
-                return 0;
-            }
+    for (i = restricted_to_length - 1; i >= 0; --i) {
+        if (directories[i] == NULL || strcmp(directories[i], restricted_to[i]) != 0) {
+            return 0;
         }
+    }
 
-        printk("File Path: %s\n", f->f_path.dentry->d_name.name);
-    // }
+    get_error = path_getxattr(&(f->f_path), OPEN_COUNT_ATTR, &open_count, sizeof(open_count), LOOKUP_FOLLOW);
+    if (get_error < 0) {
+        open_count = 0;
+    }
+    ++open_count;
+    path_setxattr(&(f->f_path), OPEN_COUNT_ATTR, &open_count, sizeof(open_count), 0, LOOKUP_FOLLOW);
+
+    printk("File: %s, Open Count: %d\n", f->f_path.dentry->d_name.name, open_count);
     return 0;
 }
 /***********************************************/
@@ -1247,7 +1244,7 @@ long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
             fsnotify_open(f);
             fd_install(fd, f);
             trace_do_sys_open(tmp->name, flags, mode);
-            allow_open(f, filename);
+            allow_open(f);
         }
     }
     putname(tmp);

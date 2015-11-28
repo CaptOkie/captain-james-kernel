@@ -5,3 +5,6 @@
 5. Bad address errors from treating pointers in kernel space as pointers from user space (TOOK A LONG TIME TO FIGURE OUT).
 6. Restricting files to a specific directory (iterating the dentry parents).
 7. File not found on relative paths since getxattr/setxattr will usually work on relative paths, but not always (passing the dentry from open).
+8. Modified path_getxattr and path_setxattr to take a path struct instead of a char* __user to fix the relative path problem.
+   Removed the lines responsible for getting the path and freeing the path.
+   
