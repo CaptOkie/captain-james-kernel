@@ -1192,7 +1192,18 @@ static inline long calc_open_time(long curr_time, long open_time_total, long ope
     return open_time_total + (curr_time - open_time_first);
 }
 
-static long allow_open(struct file* f)
+static int manual_close(unsigned int fd)
+{
+    int retval = __close_fd(current->files, fd);
+
+    /* can't restart close syscall because file table entry was cleared */
+    if (unlikely(retval == -ERESTARTSYS || retval == -ERESTARTNOINTR || retval == -ERESTARTNOHAND || retval == -ERESTART_RESTARTBLOCK))
+        retval = -EINTR;
+
+    return retval;
+}
+
+static bool allow_open(struct file* f)
 {
     struct timespec curr_time;
     long open_time_total;
@@ -1220,7 +1231,7 @@ static long allow_open(struct file* f)
     
     if (open_time_total > MAX_OPEN_TIME) {
         printk("Stopped Open: File: %s, Open Count: %ld\n", f->f_path.dentry->d_name.name, open_count);
-        return -1;
+        return false;
     }
 
     if (open_count <= 0) {
@@ -1232,10 +1243,10 @@ static long allow_open(struct file* f)
     long_setxattr(&(f->f_path), OPEN_COUNT_ATTR, &open_count);
 
     printk("Allowed Open: File: %s, Open Count: %ld\n", f->f_path.dentry->d_name.name, open_count);
-    return 0;
+    return true;
 }
 
-static long on_close(struct file* f)
+static void on_close(struct file* f)
 {
     long curr;
     long open_time_first;
@@ -1256,7 +1267,7 @@ static long on_close(struct file* f)
             
             get_error = long_getxattr(&(f->f_path), OPEN_TIME_FIRST, &open_time_first);
             if (get_error <= 0)
-                return get_error;
+                return;
 
             get_error = long_getxattr(&(f->f_path), OPEN_TIME_TOTAL, &open_time_total);
             if (get_error <= 0) {
@@ -1271,8 +1282,9 @@ static long on_close(struct file* f)
             printk("File: %s Open elsewhere.\n", f->f_path.dentry->d_name.name);
         }
     }
-    return 0;
+    return;
 }
+
 /***********************************************/
 
 long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
@@ -1299,8 +1311,9 @@ long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
             fd_install(fd, f);
             trace_do_sys_open(tmp->name, flags, mode);
 
-            if (in_restricted_path(f)) {
-                allow_open(f);
+            if (in_restricted_path(f) && !allow_open(f)) {
+                manual_close(fd);
+                fd = -EPERM;
             }
         }
     }
@@ -1373,13 +1386,14 @@ EXPORT_SYMBOL(filp_close);
  */
 SYSCALL_DEFINE1(close, unsigned int, fd)
 {
-    int retval = __close_fd(current->files, fd);
+    // int retval = __close_fd(current->files, fd);
 
-    /* can't restart close syscall because file table entry was cleared */
-    if (unlikely(retval == -ERESTARTSYS || retval == -ERESTARTNOINTR || retval == -ERESTARTNOHAND || retval == -ERESTART_RESTARTBLOCK))
-        retval = -EINTR;
+    // /* can't restart close syscall because file table entry was cleared */
+    // if (unlikely(retval == -ERESTARTSYS || retval == -ERESTARTNOINTR || retval == -ERESTARTNOHAND || retval == -ERESTART_RESTARTBLOCK))
+    //     retval = -EINTR;
 
-    return retval;
+    // return retval;
+    return manual_close(fd);
 }
 EXPORT_SYMBOL(sys_close);
 
