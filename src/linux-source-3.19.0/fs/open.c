@@ -1210,7 +1210,7 @@ static long allow_open(struct file* f)
 static long on_close(struct file* f)
 {
     if(in_restricted_path(f)) {
-        printk("Closing: %s\n", filp->f_path.dentry->d_name.name);
+        printk("Closing: %s\n", f->f_path.dentry->d_name.name);
     }
     return 0;
 }
