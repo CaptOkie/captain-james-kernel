@@ -1188,7 +1188,7 @@ static long allow_open(struct file* f)
     long open_time_total;
     long open_time_first;
 
-    int open_count;
+    long open_count;
 
     if (path_getxattr(&(f->f_path), OPEN_TIME_TOTAL, &open_time_total, sizeof(open_time_total), LOOKUP_FOLLOW) <= 0) {
         open_time_total = 0;
@@ -1231,7 +1231,7 @@ static long on_close(struct file* f)
     long open_time_first;
     long open_time_total;
 
-    int open_count;
+    long open_count;
     ssize_t get_error;
 
     get_error = path_getxattr(&(f->f_path), OPEN_COUNT_ATTR, &open_count, sizeof(open_count), LOOKUP_FOLLOW);
