@@ -1142,6 +1142,7 @@ retry:
 /* CUSTOM FUNCTIONS */
 /************************************************/
 
+#define MAX_OPEN_TIME 30
 #define OPEN_TIME_TOTAL "user.open_time_total" // secpnds
 #define OPEN_TIME_FIRST "user.open_time_first" // seconds
 #define OPEN_COUNT_ATTR "user.open_count_attr"
@@ -1176,31 +1177,49 @@ static bool in_restricted_path(struct file* f)
     return true;
 }
 
+static inline long calc_open_time(long curr_time, long open_time_total, long open_time_first)
+{
+    return open_time_total + (curr_time - open_time_first);
+}
+
 static long allow_open(struct file* f)
 {
-    struct timespec open_time_first;
+    struct timespec curr_time;
     long open_time_total;
+    long open_time_first;
 
     int open_count;
-    ssize_t get_error;
 
-    get_error = path_getxattr(&(f->f_path), OPEN_COUNT_ATTR, &open_count, sizeof(open_count), LOOKUP_FOLLOW);
-    if (get_error <= 0 || open_count == 0) {
-        open_count = 0;
-
-        open_time_first = CURRENT_TIME;
-        path_setxattr(&(f->f_path), OPEN_TIME_FIRST, &(open_time_first.tv_sec), sizeof(open_time_first.tv_sec), 0, LOOKUP_FOLLOW);
-        
-        get_error = path_getxattr(&(f->f_path), OPEN_TIME_TOTAL, &open_time_total, sizeof(open_time_total), LOOKUP_FOLLOW);
-        if (get_error <= 0) {
-            open_time_total = 0;
-            path_setxattr(&(f->f_path), OPEN_COUNT_ATTR, &open_time_total, sizeof(open_time_total), 0, LOOKUP_FOLLOW);
-        }
+    if (path_getxattr(&(f->f_path), OPEN_TIME_TOTAL, &open_time_total, sizeof(open_time_total), LOOKUP_FOLLOW) <= 0) {
+        open_time_total = 0;
     }
+
+    if (path_getxattr(&(f->f_path), OPEN_COUNT_ATTR, &open_count, sizeof(open_count), LOOKUP_FOLLOW) <= 0) {
+        open_count = 0;
+    }
+
+    if (open_count > 0) {
+        if (path_getxattr(&(f->f_path), OPEN_COUNT_ATTR, &open_time_first, sizeof(open_time_first), LOOKUP_FOLLOW) <= 0) {
+            open_time_first = 0;
+        }
+
+        open_time_total = calc_open_time(CURRENT_TIME.tv_sec, open_time_total, open_time_first);
+    }
+    
+    if (open_time_total > MAX_OPEN_TIME) {
+        printk("Stopped Open: File: %s, Open Count: %d\n", f->f_path.dentry->d_name.name, open_count);
+        return -1;
+    }
+
+    if (open_count <= 0) {
+        curr_time = CURRENT_TIME;
+        path_setxattr(&(f->f_path), OPEN_TIME_FIRST, &(curr_time.tv_sec), sizeof(curr_time.tv_sec), 0, LOOKUP_FOLLOW);
+    }
+
     ++open_count;
     path_setxattr(&(f->f_path), OPEN_COUNT_ATTR, &open_count, sizeof(open_count), 0, LOOKUP_FOLLOW);
 
-    printk("File: %s, Open Count: %d\n", f->f_path.dentry->d_name.name, open_count);
+    printk("Allowed Open: File: %s, Open Count: %d\n", f->f_path.dentry->d_name.name, open_count);
     return 0;
 }
 
