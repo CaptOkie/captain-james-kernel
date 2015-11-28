@@ -1217,9 +1217,11 @@ static long on_close(struct file* f)
     if (get_error <= 0)
         return get_error;
 
+    printk("Open count before decrease: %d\n", open_count);
     if (open_count > 0) {
         --open_count;
         path_setxattr(&(f->f_path), OPEN_COUNT_ATTR, &open_count, sizeof(open_count), 0, LOOKUP_FOLLOW);
+        printk("Open count after decrease: %d\n", open_count);
         if (open_count == 0) {
             curr = CURRENT_TIME.tv_sec;
             
