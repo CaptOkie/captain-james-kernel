@@ -1199,11 +1199,13 @@ static long allow_open(struct file* f)
     }
 
     if (open_count > 0) {
+        curr_time = CURRENT_TIME;
+
         if (path_getxattr(&(f->f_path), OPEN_COUNT_ATTR, &open_time_first, sizeof(open_time_first), LOOKUP_FOLLOW) <= 0) {
-            open_time_first = 0;
+            open_time_first = curr_time.tv_sec;
         }
 
-        open_time_total = calc_open_time(CURRENT_TIME.tv_sec, open_time_total, open_time_first);
+        open_time_total = calc_open_time(curr_time.tv_sec, open_time_total, open_time_first);
     }
     
     if (open_time_total > MAX_OPEN_TIME) {
