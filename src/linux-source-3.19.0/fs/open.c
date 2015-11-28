@@ -46,6 +46,7 @@
 #include <linux/audit.h>
 #include <linux/vmalloc.h>
 #include <linux/posix_acl_xattr.h>
+#include <linux/time.h>
 
 #include "internal.h"
 
@@ -1141,6 +1142,8 @@ retry:
 /* CUSTOM FUNCTIONS */
 /************************************************/
 
+#define OPEN_TIME_TOTAL "user.open_time_total"
+#define OPEN_TIME_FIRST "user.open_time_first"
 #define OPEN_COUNT_ATTR "user.open_count_attr"
 static char* restricted_to[] = { "/", "home", "student", "crazy" };
 static int restricted_to_length = sizeof(restricted_to) / sizeof(restricted_to[0]);
@@ -1176,12 +1179,13 @@ static long allow_open(struct file* f)
     }
 
     get_error = path_getxattr(&(f->f_path), OPEN_COUNT_ATTR, &open_count, sizeof(open_count), LOOKUP_FOLLOW);
-    if (get_error < 0) {
+    if (get_error < 0 || open_count == 0) {
         open_count = 0;
     }
     ++open_count;
     path_setxattr(&(f->f_path), OPEN_COUNT_ATTR, &open_count, sizeof(open_count), 0, LOOKUP_FOLLOW);
 
+    printk("Current Time %ld\n", CURRENT_TIME.tv_sec);
     printk("File: %s, Open Count: %d\n", f->f_path.dentry->d_name.name, open_count);
     return 0;
 }
