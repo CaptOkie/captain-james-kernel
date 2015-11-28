@@ -1215,7 +1215,6 @@ static bool allow_open(struct file* f)
     long open_time_total;
     long open_time_first;
 
-
     long open_count;
 
     if (long_getxattr(&(f->f_path), OPEN_TIME_TOTAL, &open_time_total) <= 0) {
@@ -1233,20 +1232,15 @@ static bool allow_open(struct file* f)
     time_to_tm(curr_time.tv_sec, 0, &curr);
     time_to_tm(open_time_first, 0, &open);
 
-    if (open_count > 0) {
-
-        if (is_old(&curr, &open)) {
+    if (is_old(&curr, &open)) {
+        if (open_count > 0) {            
             open_time_first = curr_time.tv_sec - (((curr.tm_hour * 60) + curr.tm_min) * 60) + curr.tm_sec);
-            open_time_total = 0;
         }
-
-        open_time_total = calc_open_time(curr_time.tv_sec, open_time_total, open_time_first);
+        open_time_total = 0;
     }
-    else {
-        if ((curr.tm_yday > open.tm_yday) || (curr.tm_year > open.tm_year)) {
-            open_time_total = 0;
-        }
-        open_time_first = curr_time.tv_sec;
+
+    if (open_count > 0) {
+        open_time_total = calc_open_time(curr_time.tv_sec, open_time_total, open_time_first);
     }
     
     if (open_time_total > MAX_OPEN_TIME) {
