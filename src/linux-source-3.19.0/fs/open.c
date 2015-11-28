@@ -1216,7 +1216,7 @@ static long on_close(struct file* f)
     get_error = path_getxattr(&(f->f_path), OPEN_COUNT_ATTR, &open_count, sizeof(open_count), LOOKUP_FOLLOW);
     if (open_count > 0) {
         --open_count;
-        path_setxattr(&(f->f_path), OPEN_COUNT_ATTR, &open_count, sizeof(open_count), 0, LOOKUP_FOLLOW)
+        path_setxattr(&(f->f_path), OPEN_COUNT_ATTR, &open_count, sizeof(open_count), 0, LOOKUP_FOLLOW);
     }
     else {
         curr = CURRENT_TIME.tv_sec;
