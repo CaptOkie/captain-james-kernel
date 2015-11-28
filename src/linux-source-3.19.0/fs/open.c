@@ -1206,6 +1206,12 @@ static long allow_open(struct file* f)
     printk("File: %s, Open Count: %d\n", f->f_path.dentry->d_name.name, open_count);
     return 0;
 }
+
+static long on_close(struct file* f)
+{
+    if(in_restricted_path(filp))
+        printk("Closing: %s\n", filp->f_path.dentry->d_name.name);
+}
 /***********************************************/
 
 long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
@@ -1279,7 +1285,9 @@ int filp_close(struct file *filp, fl_owner_t id)
         printk(KERN_ERR "VFS: Close: file count is 0\n");
         return 0;
     }
-
+    
+    on_close(filp);
+    
     if (filp->f_op->flush)
         retval = filp->f_op->flush(filp, id);
 
