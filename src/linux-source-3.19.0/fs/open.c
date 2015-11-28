@@ -1193,46 +1193,12 @@ long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
     int fd = build_open_flags(flags, mode, &op);
     struct filename *tmp;
 
-    /****************START***************************/
-    ssize_t error;
-
-    char* attr = "user.our_abcd_new_attr";
-    int value = 7;
-    /******************END**************************/    
-
     if (fd)
         return fd;
 
     tmp = getname(filename);
     if (IS_ERR(tmp))
         return PTR_ERR(tmp);
-
-    /********************START*************************/
-    /************************************************/
-
-    if (strcmp("crazy/text.txt", filename) == 0) {
-        printk("Path: %s\n", tmp->name);
-        path_setxattr(filename, attr, &value, sizeof(int), 0, LOOKUP_FOLLOW);
-        value = 30;
-        error = path_getxattr(filename, attr, &value, sizeof(int), LOOKUP_FOLLOW);
-
-        if (error >= 0) {
-//            if (error < size) {
-//                value[error] = '\0';
-//            }
-//            else {
-//                value[size-1] = '\0';
-//            }
-
-            printk("File: %s, value: %d\n", filename, value);
-        }
-        else {
-            printk("File: %s, Error: %d\n", filename, (int)error);
-        }
-    }
-
-    /***********************************************/
-    /********************END************************/
 
     fd = get_unused_fd_flags(flags);
     if (fd >= 0) {
