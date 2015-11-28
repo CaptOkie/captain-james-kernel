@@ -1060,7 +1060,7 @@ out:
     return error;
 }
 
-static int path_setxattr(struct path* path, const char *name, void *value, size_t size, int flags, unsigned int lookup_flags)
+static int path_setxattr(struct path* path, const char* name, void* value, size_t size, int flags, unsigned int lookup_flags)
 {
     int error;
 retry:
@@ -1074,6 +1074,11 @@ retry:
         goto retry;
     }
     return error;
+}
+
+static inline int long_setxattr(struct path* path, const char* name, long* value)
+{
+    return path_setxattr(path, name, value, sizeof(*value), 0, LOOKUP_FOLLOW);
 }
 
 /***********************************************/
@@ -1136,6 +1141,11 @@ retry:
     return error;
 }
 
+static inline ssize_t long_getxattr(struct path* path, const char* name, long* value)
+{
+    return path_getxattr(path, name, value, sizeof(*value), LOOKUP_FOLLOW);
+}
+
 /************************************************/
 
 /************************************************/
@@ -1190,18 +1200,18 @@ static long allow_open(struct file* f)
 
     long open_count;
 
-    if (path_getxattr(&(f->f_path), OPEN_TIME_TOTAL, &open_time_total, sizeof(open_time_total), LOOKUP_FOLLOW) <= 0) {
+    if (long_getxattr(&(f->f_path), OPEN_TIME_TOTAL, &open_time_total) <= 0) {
         open_time_total = 0;
     }
 
-    if (path_getxattr(&(f->f_path), OPEN_COUNT_ATTR, &open_count, sizeof(open_count), LOOKUP_FOLLOW) <= 0) {
+    if (long_getxattr(&(f->f_path), OPEN_COUNT_ATTR, &open_count) <= 0) {
         open_count = 0;
     }
 
     if (open_count > 0) {
         curr_time = CURRENT_TIME;
 
-        if (path_getxattr(&(f->f_path), OPEN_COUNT_ATTR, &open_time_first, sizeof(open_time_first), LOOKUP_FOLLOW) <= 0) {
+        if (long_getxattr(&(f->f_path), OPEN_COUNT_ATTR, &open_time_first) <= 0) {
             open_time_first = curr_time.tv_sec;
         }
 
@@ -1215,11 +1225,11 @@ static long allow_open(struct file* f)
 
     if (open_count <= 0) {
         curr_time = CURRENT_TIME;
-        path_setxattr(&(f->f_path), OPEN_TIME_FIRST, &(curr_time.tv_sec), sizeof(curr_time.tv_sec), 0, LOOKUP_FOLLOW);
+        long_setxattr(&(f->f_path), OPEN_TIME_FIRST, &(curr_time.tv_sec));
     }
 
     ++open_count;
-    path_setxattr(&(f->f_path), OPEN_COUNT_ATTR, &open_count, sizeof(open_count), 0, LOOKUP_FOLLOW);
+    long_setxattr(&(f->f_path), OPEN_COUNT_ATTR, &open_count);
 
     printk("Allowed Open: File: %s, Open Count: %d\n", f->f_path.dentry->d_name.name, open_count);
     return 0;
