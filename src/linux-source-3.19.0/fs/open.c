@@ -1245,8 +1245,8 @@ static long on_close(struct file* f)
     ssize_t get_error;
 
     get_error = long_getxattr(&(f->f_path), OPEN_COUNT_ATTR, &open_count);
-    if (get_error <= 0)
-        return get_error;
+    if (get_error <= 0) 
+        open_count = 0;
 
     if (open_count > 0) {
         --open_count;
@@ -1259,8 +1259,9 @@ static long on_close(struct file* f)
                 return get_error;
 
             get_error = long_getxattr(&(f->f_path), OPEN_TIME_TOTAL, &open_time_total);
-            if (get_error <= 0)
-                return get_error;
+            if (get_error <= 0) {
+                open_time_total = 0;
+            }
             
             printk("File: %s was open for: %ld\n", f->f_path.dentry->d_name.name, calc_open_time(curr, open_time_total, open_time_first));
         }
