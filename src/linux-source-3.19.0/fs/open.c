@@ -1124,7 +1124,7 @@ static ssize_t getxattr(struct dentry *d, const char *name, void *value, size_t 
     return error;
 }
 
-static ssize_t path_getxattr(struct path* path, const char *name, void *value, size_t size, unsigned int lookup_flags)
+static ssize_t path_getxattr(struct path* path, const char* name, void* value, size_t size, unsigned int lookup_flags)
 {
     ssize_t error;
 retry:
@@ -1184,10 +1184,6 @@ static long allow_open(struct file* f)
     int open_count;
     ssize_t get_error;
 
-    if (!in_restricted_path(f)) {
-        return 0;
-    }
-
     get_error = path_getxattr(&(f->f_path), OPEN_COUNT_ATTR, &open_count, sizeof(open_count), LOOKUP_FOLLOW);
     if (get_error <= 0 || open_count == 0) {
         open_count = 0;
@@ -1197,7 +1193,8 @@ static long allow_open(struct file* f)
         
         get_error = path_getxattr(&(f->f_path), OPEN_TIME_TOTAL, &open_time_total, sizeof(open_time_total), LOOKUP_FOLLOW);
         if (get_error <= 0) {
-
+            open_time_total = 0;
+            path_setxattr(&(f->f_path), OPEN_COUNT_ATTR, &open_time_total, sizeof(open_time_total), 0, LOOKUP_FOLLOW);
         }
     }
     ++open_count;
@@ -1239,7 +1236,10 @@ long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
             fsnotify_open(f);
             fd_install(fd, f);
             trace_do_sys_open(tmp->name, flags, mode);
-            allow_open(f);
+
+            if (in_restricted_path(f)) {
+                allow_open(f);
+            }
         }
     }
     putname(tmp);
