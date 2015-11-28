@@ -1263,7 +1263,9 @@ static long on_close(struct file* f)
                 open_time_total = 0;
             }
             
-            printk("File: %s was open for: %ld\n", f->f_path.dentry->d_name.name, calc_open_time(curr, open_time_total, open_time_first));
+            open_time_total = calc_open_time(curr, open_time_total, open_time_first);
+            long_setxattr(&(f->f_path), OPEN_TIME_TOTAL, &open_time_total);
+            printk("File: %s was open for: %ld\n", f->f_path.dentry->d_name.name, open_time_total);
         }
         else {
             printk("File: %s Open elsewhere.\n", f->f_path.dentry->d_name.name);
