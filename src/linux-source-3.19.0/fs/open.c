@@ -1230,7 +1230,7 @@ static long on_close(struct file* f)
             return get_error;
         
         open_time_total += (curr - open_time_first);
-        printk("File: %s was open for: %ld", f->f_path.dentry->d_name.name, open_time_total);
+        printk("File: %s was open for: %ld\n", f->f_path.dentry->d_name.name, open_time_total);
     }
     return 0;
 }
