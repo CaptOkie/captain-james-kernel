@@ -1210,7 +1210,7 @@ static inline bool is_old(struct tm* curr, struct tm* open)
 
 static inline long to_midnight(long curr_time, struct tm* curr)
 {
-    return curr_time - (((curr->tm_hour * 60) + curr->tm_min) * 60) + curr->tm_sec);
+    return curr_time - (((curr->tm_hour * 60) + curr->tm_min) * 60) + curr->tm_sec;
 }
 
 static bool allow_open(struct file* f)
