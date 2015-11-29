@@ -1231,7 +1231,7 @@ static bool allow_open(struct file* f)
     }
 
     curr_time = CURRENT_TIME;
-    if (long_getxattr(&(f->f_path), OPEN_COUNT_ATTR, &open_time_first) <= 0) {
+    if (long_getxattr(&(f->f_path), OPEN_TIME_FIRST, &open_time_first) <= 0) {
         open_time_first = curr_time.tv_sec;
     }
     time_to_tm(curr_time.tv_sec, 0, &curr);
