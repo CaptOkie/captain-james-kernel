@@ -1247,7 +1247,7 @@ static bool allow_open(struct file* f)
     if (open_count > 0) {
         open_time_total = calc_open_time(curr_time.tv_sec, open_time_total, open_time_first);
     }
-    printk("open time total: %ld\n", open_time_total);
+
     if (open_time_total > MAX_OPEN_TIME) {
         printk("Stopped Open: File: %s, Open Count: %ld\n", f->f_path.dentry->d_name.name, open_count);
         return false;
