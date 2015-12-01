@@ -1,0 +1,70 @@
+\documentclass[12pt,letterpaper]{article}
+
+\usepackage[margin=1in,headheight=1.5em]{geometry}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage[font=bf]{caption}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+
+\begin{document}
+
+\renewcommand\headrule{}
+
+\pagestyle{fancy}
+\fancyhf{}
+\lfoot{COMP 3004}
+\rfoot{\thepage/\pageref{LastPage}}
+\cfoot{Requirements Analysis Document}
+
+% Title page
+\thispagestyle{empty}
+
+%\begin{center}
+%	CARLETON UNIVERSITY
+%\end{center}
+
+\begin{center}
+\end{center}
+
+\vfill
+
+\begin{center}
+	{\Huge <Insert title here>}
+	\vspace{0.5em}\rule{\textwidth}{0.5pt}
+	COMP 3000: Operating Systems
+\end{center}
+
+\vspace{1em}
+
+\begin{center}
+    Hendrik Knoetze\\
+    Juhandr\'e Knoetze
+\end{center}
+
+\vfill
+
+\begin{center}
+	\today
+\end{center}
+
+\newpage{}
+
+\tableofcontents{}
+
+%\renewcommand{\listfigurename}{Figures}
+%\listoffigures
+
+%\renewcommand{\listtablename}{Tables}
+%\listoftables
+
+\newpage{}
+
+\input{introduction.tex}
+\input{implementation.tex}
+\input{evaluation.tex}
+\input{conclusion.tex}
+\input{contributions.tex}
+\input{appendix.tex}
+
+\end{document}

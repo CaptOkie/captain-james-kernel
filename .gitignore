@@ -33,3 +33,10 @@
 
 # Blah
 src/
+
+# latex
+*.aux
+*.log
+*.pdf
+*.synctex.gz
+*.toc
