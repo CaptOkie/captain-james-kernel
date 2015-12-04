@@ -6,3 +6,4 @@ To evaluate whether or not \texttt{do\_sys\_open} is the correct function to mod
 
 \subsection*{Extended Attributes}
 
+To test whether the extended attributes were working, a call to \texttt{path\_setxattr} is made with an initial value in a variable; the variable is then set to a different value. Finally, \texttt{path\_getxattr} is called and the result is checked to be the same as the original. The result is the same; therefore, the ability to both set and read extended attributes works.
