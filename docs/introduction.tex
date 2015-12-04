@@ -2,4 +2,15 @@
 
 \subsection{Purpose}
 
+The project is meant to limit the amount of time a file can be kept open each day by refusing subsequent attempts to open the file. The idea is a simplified version of giving ownership of files to specific programs. The two ideas share the following characteristics: a process can be allowed or denied the ability to open a particular file, and relevant information is stored in file's extended attributes.
+
+If a file is open longer than a set time, all the processes with it already open are allowed to keep it open. If any process attempts another open on the same file, then a \textit{Operation Not Permitted} error is returned.
+
+As soon as the computer clock passes midnight then any previous total open time on files is ignored, and the total open time is set back to 0. Thus, whenever a new day starts, files can be opened again for their allotted amount of time.
+
 \subsection{Design}
+
+To store all the data required to determine whether or not a file can be opened, extended attributes are used. Extended attributes are, essentially, key-value pairs which can be stored on individual files; thus, all the information for one file is stored with that file.
+
+To track how long a file is open, a value is stored as the \textit{Total Open Time} (TOT) (i.e. the time for which any already closed file was open for). A value also stores the current number of opens, \textit{Open Count} (OC), for a file (i.e. the number of times the file has been opened without being closed). Finally, a value stores the time at which the first open was performed, \textit{First Open} (FO), (i.e. the time at which an open was performed and OC was zero).
+
