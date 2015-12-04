@@ -10,7 +10,7 @@ To test whether the extended attributes were working, a call to \texttt{path\_se
 
 \subsection{Directory Restriction}
 
-To test the directory restriction, a \texttt{printk} is placed in an \texttt{if} statement to where \texttt{in\_restricted\_path} is the condition. Multiple files are opened using \texttt{less} and the only time any \texttt{printk} to run is when the opened files are in the restricted directory. Thus, the directory restriction works correctly.
+To test the directory restriction, a \texttt{printk} is placed in an \texttt{if} statement where the result of \texttt{in\_restricted\_path} is the condition. Multiple files are opened using \texttt{less} and the only time any \texttt{printk} to run is when the opened files are in the restricted directory. Thus, the directory restriction works correctly.
 
 \subsection{Permanent Lockout}
 
@@ -20,3 +20,4 @@ To test the other case where the file is still open when the OL is surpassed, an
 
 \subsection{Daily Resets}
 
+To test 
