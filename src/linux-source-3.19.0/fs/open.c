@@ -1242,6 +1242,7 @@ static bool allow_open(struct file* f)
             open_time_first = to_midnight(curr_time.tv_sec, &curr);
         }
         open_time_total = 0;
+        long_setxattr(&(f->f_path), OPEN_TIME_TOTAL, &open_time_total);
     }
 
     if (open_count > 0) {
