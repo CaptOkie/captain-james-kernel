@@ -11,3 +11,12 @@ With the source of the functionality of opening a file has been determined, the 
 
 To implement the extended attributes, the source code once again is looked through to find the source of extended attribute functionality. The system calls \texttt{getxattr} and \texttt{setxattr} are discovered in the fs/xattr.c file for getting and setting the extended attributes, respectively. Looking at the body of the \texttt{getxattr} and \texttt{setaxttr}, they call kernel functions \texttt{path\_getxattr} and \texttt{path\_setxattr}. Knowing that, to implement the extended attributes functionality, those kernel functions have to be copied into the file of \texttt{do\_sys\_open}, fs/open.c, as they are not defined in a header file. Also, all of the \texttt{\#include}s from fs/xattr.c are copied to fs/open.c. Since functions from a different file are being copied to fs/open.c and it is not clear what header files are needed for the functions, all of them are included so avoid and problems.
 
+\subsection*{Directory Restriction}
+Before modifying files with the extended attributes, the files that were to be affected by SF had to be restricted. To restrict the files, the function \texttt{in\_restricted\_path} is made, which gets called in \texttt{do\_sys\_open}. 
+
+In \texttt{in\_restricted\_path} a dentry struct is obtained from file pointer passed as the parameter. With the dentry struct, by cycling through the dentry parents, the file path is obtained. That is then compared to the file path in which files can be affected by SF.
+
+By having the files restricted to a certain directory, this reduces the likely of affecting any important operations involved in file opening to that would lead to crashing the OS. 
+
+\subsection*{PlAcE HoLdEr}
+
