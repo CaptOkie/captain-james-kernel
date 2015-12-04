@@ -12,5 +12,5 @@ As soon as the computer clock passes midnight then any previous total open time 
 
 To store all the data required to determine whether or not a file can be opened, extended attributes are used. Extended attributes are, essentially, key-value pairs which can be stored on individual files; thus, all the information for one file is stored with that file.
 
-To track how long a file is open, a value is stored as the \textit{Total Open Time} (TOT) (i.e. the time for which any already closed file was open for). A value also stores the current number of opens, \textit{Open Count} (OC), for a file (i.e. the number of times the file has been opened without being closed). Finally, a value stores the time at which the first open was performed, \textit{First Open} (FO), (i.e. the time at which an open was performed and OC was zero).
+To track how long a file is open, a value is stored as the \textit{Total Open Time} (TOT) (i.e. the time for which any already closed file was open for). A value also stores the current number of opens, \textit{Open Count} (OC), for a file (i.e. the number of times the file has been opened without being closed). Finally, a value stores the time at which the first open was performed, \textit{First Open} (FO), (i.e. the time at which an open was performed when the OC was zero).
 
