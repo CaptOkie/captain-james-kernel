@@ -1,22 +1,22 @@
 \section{Evaluation}
 
-\subsection*{Starting Point}
+\subsection{Starting Point}
 
 To evaluate whether or not \texttt{do\_sys\_open} is the correct function to modify, a \texttt{printk} is placed in the function. Opening a file with the \texttt{less} command resulted in the message in the \texttt{printk} being called. Thus, it was clear this was the correct function for opening files.
 
-\subsection*{Extended Attributes}
+\subsection{Extended Attributes}
 
 To test whether the extended attributes were working, a call to \texttt{path\_setxattr} is made with an initial value in a variable; the variable is then set to a different value. Finally, \texttt{path\_getxattr} is called and the result is checked to be the same as the original. The result is the same; therefore, the ability to both set and read extended attributes works.
 
-\subsection*{Directory Restriction}
+\subsection{Directory Restriction}
 
 To test the directory restriction, a \texttt{printk} is placed in an \texttt{if} statement to where \texttt{in\_restricted\_path} is the condition. Multiple files are opened using \texttt{less} and the only time any \texttt{printk} to run is when the opened files are in the restricted directory. Thus, the directory restriction works correctly.
 
-\subsection*{Permanent Lockout}
+\subsection{Permanent Lockout}
 
 To test the permanent lockout, an OL of 30 seconds is set. Then a file is created in the restricted directory and several opens are done, using \texttt{less}, totalling to at least the OL. The file is then closed and another open is attempted. Since the last open attempt is rejected and fails, it can be concluded that the permanent lockout works and only prevents opens after a total open time of OL.
 
 To test the other case where the file is still open when the OL is surpassed, an open is performed and kept open, using \texttt{less}. Once the file has been open for at least the OL, another open attempt is made. Since the first open remains and the second open is rejected, it is clear that performing file lockouts works as expected.
 
-\subsection*{Daily Resets}
+\subsection{Daily Resets}
 
