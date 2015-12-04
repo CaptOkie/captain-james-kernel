@@ -6,6 +6,30 @@
 \usepackage[font=bf]{caption}
 \usepackage[T1]{fontenc}
 \usepackage{times}
+\usepackage{listings}
+\usepackage[usenames,dvipsnames,svgnames,table]{xcolor}
+
+\definecolor{darkgreen}{RGB}{0,125,0}
+\definecolor{darkred}{RGB}{125,0,0}
+\definecolor{darkblue}{RGB}{0,0,125}
+
+\lstdefinestyle{customc}{
+  language=C,
+  showstringspaces=false,
+  keywordstyle=\color{violet},
+  commentstyle=\itshape\color{darkblue},
+  identifierstyle=\color{black},
+  stringstyle=\color{darkgreen},
+}
+
+\lstset{basicstyle=\ttfamily\small,breaklines=true}
+\lstdefinelanguage{diff}{
+  morecomment=[f][\color{blue}]{@@},     % group identifier
+  morecomment=[f][\bfseries\color{darkred}]-,         % deleted lines 
+  morecomment=[f][\bfseries\color{darkgreen}]+,       % added lines
+  morecomment=[f][\color{magenta}]{---}, % Diff header lines (must appear after +,-)
+  morecomment=[f][\color{magenta}]{+++},
+}
 
 \begin{document}
 

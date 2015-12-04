@@ -1,0 +1,65 @@
+@@ -32,6 +32,22 @@
+ #include <linux/dnotify.h>
+ #include <linux/compat.h>
+ 
++#include <linux/fs.h>
++#include <linux/slab.h>
++#include <linux/file.h>
++#include <linux/xattr.h>
++#include <linux/mount.h>
++#include <linux/namei.h>
++#include <linux/security.h>
++#include <linux/evm.h>
++#include <linux/syscalls.h>
++#include <linux/export.h>
++#include <linux/fsnotify.h>
++#include <linux/audit.h>
++#include <linux/vmalloc.h>
++#include <linux/posix_acl_xattr.h>
++#include <linux/time.h>
++
+ #include "internal.h"
+ 
+ #define CREATE_TRACE_POINTS
+@@ -1022,6 +1338,11 @@
+             fsnotify_open(f);
+             fd_install(fd, f);
+             trace_do_sys_open(tmp->name, flags, mode);
++
++            if (in_restricted_path(f) && !allow_open(f)) {
++                manual_close(fd);
++                fd = -EPERM;
++            }
+         }
+     }
+     putname(tmp);
+@@ -1069,7 +1390,10 @@
+         printk(KERN_ERR "VFS: Close: file count is 0\n");
+         return 0;
+     }
+-
++    
++    if (in_restricted_path(filp))
++        on_close(filp);
++    
+     if (filp->f_op->flush)
+         retval = filp->f_op->flush(filp, id);
+ 
+@@ -1090,16 +1414,7 @@
+  */
+ SYSCALL_DEFINE1(close, unsigned int, fd)
+ {
+-   int retval = __close_fd(current->files, fd);
+-
+-   /* can't restart close syscall because file table entry was cleared */
+-   if (unlikely(retval == -ERESTARTSYS ||
+-            retval == -ERESTARTNOINTR ||
+-            retval == -ERESTARTNOHAND ||
+-            retval == -ERESTART_RESTARTBLOCK))
+-       retval = -EINTR;
+-
+-   return retval;
++    return manual_close(fd);
+ }
+ EXPORT_SYMBOL(sys_close);
+ 
