@@ -1,22 +1,28 @@
 \section{Implementation}
-\subsection*{Starting Point}
+\subsection{Starting Point}
 The first step to implementing SF is to determine what part of the Linux kernel needs to be modified, specifically, which system call(s). Since SF is involved with limiting the opening of files, the starting point for determining which system call(s) are used is to look at what happens when a file is opened.
 
 To examine what happens when a file is opened, the tool \texttt{strace} can be used. While in the terminal, calling on \texttt{strace} on a command will output all the system calls that occur from the running of a program. \texttt{strace} is used on commands such as \texttt{cat}, for example, to see what system calls are called for the opening of a file. While there are many system calls that are output, by looking at what parameters are used being passed to these system calls, it can be narrowed down to being the \texttt{open} system call.
 
 Now that the system call that has been determined, the source code of the kernel is looked through to see what kernel functions the \texttt{open} system call calls. Other than the check at the beginning of the \texttt{open} system call to check if it is a large file, \texttt{open} is just made up of the function \texttt{do\_sys\_open}.
 
-\subsection*{Extended Attributes}
+\subsection{Extended Attributes}
 With the source of the functionality of opening a file has been determined, the implementation of SF can begin. Since the design of the system uses the extended attributes of a file, implementing that functionality is a first.
 
 To implement the extended attributes, the source code once again is looked through to find the source of extended attribute functionality. The system calls \texttt{getxattr} and \texttt{setxattr} are discovered in the fs/xattr.c file for getting and setting the extended attributes, respectively. Looking at the body of the \texttt{getxattr} and \texttt{setaxttr}, they call kernel functions \texttt{path\_getxattr} and \texttt{path\_setxattr}. Knowing that, to implement the extended attributes functionality, those kernel functions have to be copied into the file of \texttt{do\_sys\_open}, fs/open.c, as they are not defined in a header file. Also, all of the \texttt{\#include}s from fs/xattr.c are copied to fs/open.c. Since functions from a different file are being copied to fs/open.c and it is not clear what header files are needed for the functions, all of them are included so avoid and problems.
 
-\subsection*{Directory Restriction}
+\subsection{Directory Restriction}
 Before modifying files with the extended attributes, the files that were to be affected by SF had to be restricted. To restrict the files, the function \texttt{in\_restricted\_path} is made, which gets called in \texttt{do\_sys\_open}. 
 
 In \texttt{in\_restricted\_path} a dentry struct is obtained from file pointer passed as the parameter. With the dentry struct, by cycling through the dentry parents, the file path is obtained. That is then compared to the file path in which files can be affected by SF.
 
 By having the files restricted to a certain directory, this reduces the likely of affecting any important operations involved in file opening to that would lead to crashing the OS. 
 
-\subsection*{PlAcE HoLdEr}
+\subsection{Permanent Lockout}
+For the main logic of SF, the extended attributes are used to set three attributes onto the files: what time, in seconds, the first open time (FOT), how long it has been opened for (OT), and how any processes have the file open (OC). These attributes are called \texttt{user.open\_time\_first}, \texttt{user.open\_time\_total}, and \texttt{user.open\_count\_attr} respectively. When a file is open and is within the restricted file path, in the \texttt{do\_sys\_open} function, these values would be set.
 
+To set the values of extended attributes, the function \texttt{path\_setxattr} is used. It normally would take a user space pointer for a string that contained the file path of the file as one of the parameters. For SF, this function has been modified because the file paths passed to calls for \texttt{path\_setxattr} are made in kernel space. To correct for this, in the body of \texttt{path\_setxattr}, there are lines removed that would move the information from user space memory to kernel memory. If that is not done, then the function would throw an error because it is trying to access memory from user space that does not exist. As well, the file path string parameter is changed to a path struct which allowed for simplifying \texttt{path\_setxattr}. To simplify calls to \texttt{path\_sexattr} a little more, a simple wrapper function \texttt{long\_sexattr} is made to call \texttt{path\_sexattr} with all the default flags so that is not repeated in the code at every call.
+
+For getting the extended attributes, the exact same method is employed, but \texttt{path\_getaxttr} is main function used. It is modified in the same way as \texttt{path\_getxattr} to compensate for the same user space pointer issue. A wrapper function \texttt{long\_getxattr} is also created to simply the calls to \texttt{path\_getxattr}.
+
+As mentioned in the design, these values also have to be set during the closing of the function. The function \texttt{on\_close} is created to handle the logic of the closing of the file. When a file is close, the \texttt{user.open\_count\_attr} attribute would be updated to 
