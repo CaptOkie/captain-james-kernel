@@ -1,6 +1,8 @@
 \section{Conclusion}
 
-\subsection{Contributions}
+\subsection{End Result}
+
+From the evaluations, it appears our system works the way it is intended to. There are some things (as discuss in \textit{Limitations \& Future Work}) that would improve the overall system; however, having implemented simple file restrictions and file opening prevention, it would be easier to implement the original idea of adding process ownership over files.
 
 \subsection{Limitations \& Future Work}
 
@@ -19,3 +21,7 @@ After implementing most of SF, during an examination of the \texttt{fs/xattr.c} 
 \subsubsection*{Concurrency}
 
 Currently, it is possible that two processes open a file at the same time, and both have the OC retrieved at the same time. Thus, when the incremented OC is set it will only be incremented by one instead of two. This problem applies to every set that is performed; however, the problem is slightly different for each. There are plans to attempt to modify the \texttt{generic\_setxattr} to perform an update instead of a set so that any update would be atomic and would ensure this issue doesn't arise.
+
+\subsubsection*{Editable Attributes}
+
+Currently it is possible for the attributes used to track the locking status of the file to be set by any user/process. Hiding these attributes and preventing users/processes from setting them would improve the overall functionality of SF.
