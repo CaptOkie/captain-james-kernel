@@ -48,5 +48,9 @@ Before allowing the opening to proceed, however, SF checks if the file is alread
 
 \subsection{Issues}
 \subsubsection*{User Space Pointers}
+Originally, when \texttt{path\_setaxttr} or \texttt{path\_getxattr} got called, both of them would return an error 14. After extensive internet searching, it is observed that an error 14 in the kernel is a `bad address' error. With that in mind, it must be some error with one of the pointers being passed in. The first thought for the cause of the error is that the errors are coming from the \texttt{char*} and \texttt{void*} parameters. After many attempts at passing different values in for the \texttt{char*} and \texttt{void*} parameters, the functions would always return error 14. 
 
+With every possible way to pass values in for the mentioned parameters, the strategy for isolating the problem is changed. To locate the problem, \texttt{printk} statements are placed in the functions everywhere an error is being checked for from the return of a function call. These \texttt{printk} statements help locate which call or calls inside \texttt{path\_setaxttr} and \texttt{path\_getxattr} that are returning the error 14. Through doing this, the errors are tracked to being produced by functions such as \texttt{strncpy\_from\_user}. The value being passed to this function is the value in the \texttt{char*} \texttt{\_\_user} \texttt{pathname} parameter. 
+
+Discovering where the error is originating from, the cause is apparent. The function is trying to copy information from user space to kernel space. More specifically, the information stored in memory from the user space pointer is trying to be copied to memory in kernel space. Since the 
 \subsubsection*{Relative Paths}
