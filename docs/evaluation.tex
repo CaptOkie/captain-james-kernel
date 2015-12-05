@@ -20,4 +20,6 @@ To test the other case where the file is still open when the OL is surpassed, an
 
 \subsection{Daily Resets}
 
-To test 
+To test the daily resets, two different test are performed. First, a file is opened for at least the length of the OL, then a second open is attempted to ensure the file is locked. Next, the file is left until the following day when another open is attempted. On this open the file was no longer locked, indicating that the daily resets are functioning correctly.
+
+For the second test, instead of waiting until the next to attempt the open, the FOT is manually set to a previous day. Then another open is attempted where the open succeeds, indicating the daily resets are functioning correctly.
