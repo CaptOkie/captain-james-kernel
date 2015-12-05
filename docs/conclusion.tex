@@ -2,6 +2,20 @@
 
 \subsection{Contributions}
 
-\subsection{Limitations}
+\subsection{Limitations \& Future Work}
 
-\subsection{Future Plans}
+\subsubsection*{Newly Created Files}
+
+An immediate limitation to SF applies to the creation of new files. Currently, when a new file is created (which also immediately sets the newly created file to open) the total open time is not immediately accumulated (i.e. If a file a created and kept open longer than the OL, other processes are still able to open the file).
+
+\subsubsection*{Non-automatic Closes}
+
+The one case where a process can use a file that is already locked out is when the process has the file open during the period where the TOT surpasses the OL. Thus, there is currently no way to prevent a process from continuing to use a file if it already has it open.
+
+\subsubsection*{Attribute Manipulation}
+
+After implementing most of SF, during an examination of the \texttt{fs/xattr.c} file, it was observed that there already exists version of \texttt{getxattr} and \texttt{setxattr} intended for kernel use called \texttt{generic\_getxattr} and \texttt{generic\_setxattr}. This means it would be possible to (a) clean up the includes and just include \texttt{<linux/xattr.h>} in order to set and get the extended attributes (b) remove the repeated/modified versions of \texttt{path\_getxattr} and \texttt{path\_setxattr}.
+
+\subsubsection*{Concurrency}
+
+Currently, it is possible that two processes open a file at the same time, and both have the OC retrieved at the same time. Thus, when the incremented OC is set it will only be incremented by one instead of two. This problem applies to every set that is performed; however, the problem is slightly different for each. There are plans to attempt to modify the \texttt{generic\_setxattr} to perform an update instead of a set so that any update would be atomic and would ensure this issue doesn't arise.
