@@ -1,24 +1,29 @@
 \section{Implementation}
+
 \subsection{Starting Point}
+
 The first step to implementing SF is to determine what part of the Linux kernel needs to be modified, specifically, which system call(s). Since SF is involved with limiting the opening of files, the starting point for determining which system call(s) are used is to look at what happens when a file is opened.
 
-To examine what happens when a file is opened, the tool \texttt{strace} can be used. While in the terminal, calling on \texttt{strace} on a command will output all the system calls that occur from the running of a program. \texttt{strace} is used on commands such as \texttt{cat}, for example, to see what system calls are called for the opening of a file. While there are many system calls that are output, by looking at what parameters are used being passed to these system calls, it can be narrowed down to being the \texttt{open} system call.
+To examine what happens when a file is opened, \texttt{strace} is used on commands such as \texttt{cat}, for example, to see what system calls are called to read from a file. While there are many system calls that are output, by looking at what parameters are passed to these system calls, it can be narrowed down to the \texttt{open} system call.
 
-Now that the system call that has been determined, the source code of the kernel is looked through to see what kernel functions the \texttt{open} system call calls. Other than the check at the beginning of the \texttt{open} system call to check if it is a large file, \texttt{open} is just made up of the function \texttt{do\_sys\_open}.
+Now that the system call has been determined, the source code of the kernel is looked through to see what kernel functions the \texttt{open} system call uses. Other than the check at the beginning of the \texttt{open} system call to check if it is a large file, \texttt{open} is just made up of the function \texttt{do\_sys\_open}. Thus, the starting point is narrowed down to \texttt{do\_sys\_open}.
 
 \subsection{Extended Attributes}
-With the source of the functionality of opening a file has been determined, the implementation of SF can begin. Since the design of the system uses the extended attributes of a file, implementing that functionality is a first.
 
-To implement the extended attributes, the source code once again is looked through to find the source of extended attribute functionality. The system calls \texttt{getxattr} and \texttt{setxattr} are discovered in the fs/xattr.c file for getting and setting the extended attributes, respectively. Looking at the body of the \texttt{getxattr} and \texttt{setaxttr}, they call kernel functions \texttt{path\_getxattr} and \texttt{path\_setxattr}. Knowing that, to implement the extended attributes functionality, those kernel functions have to be copied into the file of \texttt{do\_sys\_open}, fs/open.c, as they are not defined in a header file. Also, all of the \texttt{\#include}s from fs/xattr.c are copied to fs/open.c. Since functions from a different file are being copied to fs/open.c and it is not clear what header files are needed for the functions, all of them are included so avoid and problems.
+Since the design of the system uses the extended attributes of a file, implementing that functionality is a first.
+
+To implement the extended attributes, the source code is, once again, looked through to find the source of extended attribute functionality. The system calls \texttt{getxattr} and \texttt{setxattr} are discovered in the \texttt{fs/xattr.c} file for getting and setting the extended attributes, respectively. Looking at the body of the \texttt{getxattr} and \texttt{setaxttr}, they call kernel functions \texttt{path\_getxattr} and \texttt{path\_setxattr}. Knowing that, to implement the extended attributes functionality, those kernel functions have to be copied into the file of \texttt{do\_sys\_open}, \texttt{fs/open.c}, as they are not defined in a header file. Since functions from a different file are being copied to \texttt{fs/open.c} and it is not clear what header files are needed for the functions, all of the \texttt{\#include} statements are copied over to avoid any potential problems.
 
 \subsection{Directory Restriction}
-Before modifying files with the extended attributes, the files that were to be affected by SF had to be restricted. To restrict the files, the function \texttt{in\_restricted\_path} is made, which gets called in \texttt{do\_sys\_open}. 
 
-In \texttt{in\_restricted\_path} a dentry struct is obtained from file pointer passed as the parameter. With the dentry struct, by cycling through the dentry parents, the file path is obtained. That is then compared to the file path in which files can be affected by SF.
+Before modifying files with the extended attributes, the files that are to be affected by SF have to be restricted. To restrict the files, the function \texttt{in\_restricted\_path} is made, which gets called in \texttt{do\_sys\_open}. 
 
-By having the files restricted to a certain directory, this reduces the likely of affecting any important operations involved in file opening to that would lead to crashing the OS. 
+In \texttt{in\_restricted\_path} a dentry struct is obtained from the file pointer parameter. The dentry struct has a parent dentry field which can be iterated to obtain the file path. That is then compared to the restricted file path to determine whether or not the file should be considered by SF.
+
+By having the files restricted to a certain directory, the likelihood of affecting any important files needed by the kernel is reduced. 
 
 \subsection{Permanent Lockout}
+
 For the main logic of SF, the extended attributes functionality is used to set and get three attributes of the files: what time, in epoch time, the first open time (FOT), the total time it has been opened for (TOT), and the open count (OC). These attributes are called \texttt{user.open\_time\_first}, \texttt{user.open\_time\_total}, and \texttt{user.open\_count\_attr} respectively.
 
 If a file is opened for the first time, then the OC is 0 so it gets set to 1, which involves setting the \texttt{user.open\_count\_attr} attribute. As outlined in the design, since the OC is 0 when it is opened, then the FOT is set, so the \texttt{user.open\_time\_first} is set to the current time.
